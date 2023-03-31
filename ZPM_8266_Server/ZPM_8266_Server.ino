@@ -1,8 +1,8 @@
-/*********
-  Rui Santos:  https://randomnerdtutorials.com/esp8266-nodemcu-access-point-ap-web-server/
-*********/
+/*
+* Reference:  Rui Santos (https://randomnerdtutorials.com/esp8266-nodemcu-access-point-ap-web-server/)
+*/
 
-// Import required libraries
+//----- LIBRARIES start -----//
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <Hash.h>
@@ -10,6 +10,7 @@
 #include <ESPAsyncWebSrv.h>
 #include <Adafruit_Sensor.h>
 #include <DHT.h>
+//----- end LIBRARIES
 
 const char* ssid     = "ZPM";
 const char* password = "Arcade1980";
@@ -98,7 +99,7 @@ setInterval(function ( ) {
 
 // Replaces placeholder with DHT values
 String processor(const String& var){
-  //Serial.println(var);
+  Serial.println(var);
   if(var == "TEMPERATURE"){
     return String(t);
   }
@@ -109,8 +110,8 @@ String processor(const String& var){
 }
 
 void setup(){
-  // Serial port for debugging purposes
-  Serial.begin(115200);
+  //Serial port for debugging purposes
+  Serial.begin(9600);
   dht.begin();
   
   Serial.print("Setting AP (Access Point)…");
@@ -147,7 +148,7 @@ void loop(){
     // Read temperature as Celsius (the default)
     float newT = dht.readTemperature();
     // Read temperature as Fahrenheit (isFahrenheit = true)
-    //float newT = dht.readTemperature(true);
+    // float newT = dht.readTemperature(true);
     // if temperature read failed, don't change t value
     if (isnan(newT)) {
       Serial.println("Failed to read from DHT sensor!");

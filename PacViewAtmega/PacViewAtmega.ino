@@ -161,6 +161,7 @@ int data_count;                    // counter for number of characters stored or
 unsigned char c;                   // char read by client from server http reply
 unsigned char data_line [500];     // this will be an array holding the invidiually read data points in ASCII value.
 bool ESP_SPOKE;
+bool COMMAND_END_REACHED;  // When reading the serial message from ESP8266, will know command has ended when the period charachter is reached.
 String report;
 SoftwareSerial mySerial(7,8);  // RX,TX
   //  Arduino pin 0 (RX) to ESP8266 TX
@@ -174,7 +175,7 @@ SoftwareSerial mySerial(7,8);  // RX,TX
 void setup() {
 
   Serial.begin(9600);
-  //mySerial.begin(9600);   // Start the software serial for communication with the ESP8266
+  mySerial.begin(9600);   // Start the software serial for communication with the ESP8266
   Serial.println("Start setup");
   for(i=0; i<6; i+=1){pinMode(PINS_FOR_FLICKER[i],OUTPUT);}
   pinMode(13,OUTPUT); //---sound pin
@@ -239,34 +240,35 @@ void setup() {
 
 void loop() {
  //Check to see if anything is available in the serial receive buffer
- while (Serial.available() > 0)
+ while (mySerial.available() > 0)
  {
    //Create a place to hold the incoming message
    static char message[MAX_MESSAGE_LENGTH];
    static unsigned int message_pos = 0;
 
    //Read the next available byte in the serial receive buffer
-   char inByte = Serial.read();
+   char inByte = mySerial.read();
 
    //Message coming in (check not terminating character) and guard for over message size
-   if (inByte != '\n' && (message_pos < MAX_MESSAGE_LENGTH - 1))
+   if (inByte != '.') // && (message_pos < MAX_MESSAGE_LENGTH - 1))  // inByte != '\n'  was original
    {
      //Add the incoming byte to our message
      message[message_pos] = inByte;
+     //Serial.print(inByte);
      message_pos++;
    }
    //Full message received...
    else
    {
-     //Add null character to string
-     message[message_pos] = '\0';
+     //Add a carriage return to string
+     message[message_pos] = '\n';
 
      //Print the message (or do other things)
      Serial.println(message);
 
-     //Or convert to interger and pring     
-     int number = atoi(message);
-     Serial.println(number);
+     //Or convert to interger and print    
+     //int number = atoi(message);
+     //Serial.println(number);
      //Reset for the next message
      message_pos = 0;
    }

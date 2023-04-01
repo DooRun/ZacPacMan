@@ -1,4 +1,4 @@
-//  PacManAtmega
+//  ZacPacManAtmega
 
 /*    
  * Atmega chip code for Zach's PacMan lighted shelf.
@@ -141,9 +141,11 @@ int DARK_TRIGGER = 500;  // Value below which room is considered dark (ROOM_DARK
 const int NUMBER_OF_FLICKER_PINS = 6;
 const int PINS_FOR_FLICKER[NUMBER_OF_FLICKER_PINS] = {11, 10, 9, 6, 5, 3};  // in order, Pinky, Clyde, Cherries, PacMan, Blinky, Inky.
 
-bool MASTER_ON = 1; // enables sign to operate.  Allows for disabling all lights and sound for all modes.
-bool SOUND_ENABLE = 1;  // Allows turning off the sound for night modes or other times silence is desired.
-bool CHARACTER_ENABLE [6] = {1,1,1,1,1,1};  // Enable to light up charactors Pinky, Clyde, Cherries, PacMan, Blinky, Inky, respectively.
+bool M_EN = 1; // Master enable:  Enables all lights and sound for all modes.
+bool L_EN = 1; // Light enable:  Enables all lights.
+bool S_EN = 1;  // Sound enable:  Enables sound (Allows for disableing sound for night modes or other times silence is desired).
+bool CHAR_EN [6] = {1,1,1,1,1,1};  // Character enable: Enables lighting up charactors Pinky, Clyde, Cherries, PacMan, Blinky, Inky, respectively.
+bool CLCK_EN = 1;  // Clock enable.
 int i;
 int j;
 byte PIN;
@@ -158,11 +160,14 @@ byte TOGGLE;
 
 //----- COMMUNICATIONS RELATED -----//
 long SERIAL_TIMEOUT = 150; // This is needed for serial read otherwise, may not read all the data.
-int data_count;                    // counter for number of characters stored or printed.
-unsigned char c;                   // char read by client from server http reply
-unsigned char data_line [701];     // this will be an array holding the invidiually read data points in ASCII value.
+//unsigned char c;                   // char read by client from server http reply
 bool ESP_SPOKE;
-SoftwareSerial mySerial(0,1);  // RX,TX
+SoftwareSerial mySerial(7,8);  // RX,TX
+String MESSAGE_INCOMING = ""; 
+int message_length;
+int COMMAND_CAT;
+int COMMAND_VALUE;
+int MESSAGE_PART_LENGTH[99];
   //  Arduino pin 0 (RX) to ESP8266 TX
   //  Arduino pin 1 to voltage divider then to ESP8266 RX
   //  Connect GND from the Arduiono to GND on the ESP8266
@@ -172,8 +177,7 @@ SoftwareSerial mySerial(0,1);  // RX,TX
 FlickerController flicker_controller(PINS_FOR_FLICKER, NUMBER_OF_FLICKER_PINS);  //---Nick's program for flickering LEDs as if short circuiting.
 
 void setup() {
-
-  //Serial.begin(9600);
+  Serial.begin(9600);
   mySerial.begin(9600);   // Start the software serial for communication with the ESP8266
   //Serial.println("Start setup");
   for(i=0; i<6; i+=1){pinMode(PINS_FOR_FLICKER[i],OUTPUT);}
@@ -182,22 +186,64 @@ void setup() {
   pinMode(MOTION_PIN, INPUT);
   flicker_controller.setup_controller();
   //Startup_Sequence();
+  MESSAGE_PART_LENGTH[11] = 5;
+  MESSAGE_PART_LENGTH[12] = 5;
+  MESSAGE_PART_LENGTH[13] = 5;
 }
 
 void loop() {
-
-  while (mySerial.available())
+  //Check to see if anything is available in the serial receive buffer
+  MESSAGE_INCOMING = "";
+  while (mySerial.available() > 0)
   {
-      data_count = data_count + 1;
-      data_line [data_count] = mySerial.read();
-      ESP_SPOKE = true;
-      delay(1);
+     ESP_SPOKE = true;
+     char c = mySerial.read();  // read a byte
+     //Serial.print(c);
+     MESSAGE_INCOMING += c;
   }
+
   if(ESP_SPOKE == true)  
   {
-    String report = "";  
+    //digitalWrite(13,1);
+    Serial.println("======");
+    Serial.println(MESSAGE_INCOMING);
+    COMMAND_CAT = "";  // reset
+    COMMAND_VALUE = 0; // reset
+    COMMAND_CAT = MESSAGE_INCOMING.indexOf(0,1);  // extract the COMMAND_CAT.
+    Serial.println(COMMAND_CAT);
+    message_length = MESSAGE_PART_LENGTH[COMMAND_CAT];
+    for (int i = 2; i<=message_length-1; i=i+1)  
+    {
+      COMMAND_VALUE = COMMAND_VALUE * 10 + (MESSAGE_INCOMING.indexOf(i,i+1) - 48);
+      Serial.print(COMMAND_VALUE);
+    }
+
+    if(COMMAND_CAT == '11'){if(COMMAND_VALUE == 1){M_EN = 1;}else{M_EN = 0;}}  // Master enable
+    if(COMMAND_CAT == '12'){if(COMMAND_VALUE == 1){L_EN = 1;}else{L_EN = 0;}}  // Master enable
+    if(COMMAND_CAT == '13'){if(COMMAND_VALUE == 1){S_EN = 1;}else{S_EN = 0;}}  // Master enable
+
+    digitalWrite(PINS_FOR_FLICKER[0], 1 * M_EN * L_EN);
+    digitalWrite(PINS_FOR_FLICKER[1], 1 * M_EN * L_EN);
+    digitalWrite(PINS_FOR_FLICKER[2], 1 * M_EN * L_EN);
+    digitalWrite(PINS_FOR_FLICKER[3], 1 * M_EN * L_EN);
+    digitalWrite(PINS_FOR_FLICKER[4], 1 * M_EN * L_EN);   
+    digitalWrite(PINS_FOR_FLICKER[5], 1 * M_EN * L_EN); 
+    ESP_SPOKE = false;
+  }
+  delay(10);
+  //digitalWrite(13,0);
+}
+
+
+/*
+    c = client.read();  // read a byte
+    MESSAGE_TO_ATMEGA += c;
+    Serial.write(c);
+    COMMAND_CAT += c - 48;
+    message_length = MESSAGE_PART_LENGTH[COMMAND_CAT];
     for(int i=0; i<data_count + 1; i++)
     {
+      COMMAND_VALUE = COMMAND_VALUE * 10 + 
       report = report + char(data_line [i]);
       //digitalWrite(PINS_FOR_FLICKER[3],1);
       //delay(100);
@@ -228,7 +274,7 @@ void loop() {
     //Serial.println(COMMAND);
     //Serial.println(PIN);   
     //play_PacMan_intro_song(3);
-    TOGGLE = TOGGLE + 1;
+    /*TOGGLE = TOGGLE + 1;
     if(TOGGLE ==2)
     {
       PIN = PIN + 1;
@@ -274,6 +320,7 @@ void loop() {
     }
     else{}
   }
+}
   delay(10);
 
   /*
@@ -324,7 +371,7 @@ void loop() {
   
   delay(40);
 */
-}
+
 
 
 void fade_out_one_LED(){

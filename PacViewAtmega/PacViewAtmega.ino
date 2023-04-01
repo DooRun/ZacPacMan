@@ -146,6 +146,13 @@ bool SOUND_ENABLE = 1;  // Allows turning off the sound for night modes or other
 bool CHARACTER_ENABLE [6] = {1,1,1,1,1,1};  // Enable to light up charactors Pinky, Clyde, Cherries, PacMan, Blinky, Inky, respectively.
 int i;
 int j;
+//----- COMMS VARIABLES -----//
+String MESSAGE_INCOMING = ""; 
+int message_length;
+int COMMAND_CAT;
+int MESSAGE_PART_LENGTH[99];
+char c;
+//----- end COMMS VARIABLES
 //----- end GENERAL VARIABLES
 
 //----- LIBRARIES start -----//
@@ -155,7 +162,7 @@ int j;
 //----- end LIBRARIES
 
 //----- COMMUNICATIONS RELATED -----//
-const unsigned int MAX_MESSAGE_LENGTH = 100;
+//const unsigned int MAX_MESSAGE_LENGTH = 100;
 long SERIAL_TIMEOUT = 250; // This is needed for serial read otherwise, may not read all the data.
 int data_count;                    // counter for number of characters stored or printed.
 unsigned char c;                   // char read by client from server http reply
@@ -227,14 +234,15 @@ void setup() {
     delay(66);
   }
 //---end STARTUP SEQUENCE*/
-    analogWrite(PINS_FOR_FLICKER[0],0);
-    analogWrite(PINS_FOR_FLICKER[1],0);
-    analogWrite(PINS_FOR_FLICKER[2],0);
-    analogWrite(PINS_FOR_FLICKER[3],0);
-    analogWrite(PINS_FOR_FLICKER[4],0);
-    analogWrite(PINS_FOR_FLICKER[5],0);
-
-    
+  analogWrite(PINS_FOR_FLICKER[0],0);
+  analogWrite(PINS_FOR_FLICKER[1],0);
+  analogWrite(PINS_FOR_FLICKER[2],0);
+  analogWrite(PINS_FOR_FLICKER[3],0);
+  analogWrite(PINS_FOR_FLICKER[4],0);
+  analogWrite(PINS_FOR_FLICKER[5],0);
+  MESSAGE_PART_LENGTH[11] = 5;
+  MESSAGE_PART_LENGTH[12] = 5;
+  MESSAGE_PART_LENGTH[13] = 5;
 
 }
 
@@ -242,9 +250,11 @@ void loop() {
  //Check to see if anything is available in the serial receive buffer
  while (mySerial.available() > 0)
  {
-   //Create a place to hold the incoming message
-   static char message[MAX_MESSAGE_LENGTH];
-   static unsigned int message_pos = 0;
+    ESP_SPOKE = true;
+    c = client.read();  // read a byte
+    MESSAGE_INCOMING += c;
+ }
+
 
    //Read the next available byte in the serial receive buffer
    char inByte = mySerial.read();
@@ -256,12 +266,15 @@ void loop() {
      message[message_pos] = inByte;
      //Serial.print(inByte);
      message_pos++;
+     data_count = data_count + 1;
+     data_line [data_count] = mySerial.read();
+     ESP_SPOKE = true;
    }
    //Full message received...
    else
    {
      //Add a carriage return to string
-     message[message_pos] = '\n';
+     //message[message_pos] = '\n';
 
      //Print the message (or do other things)
      Serial.println(message);
@@ -274,7 +287,6 @@ void loop() {
    }
  }
 }
-/*
 
   while (mySerial.available())
   {

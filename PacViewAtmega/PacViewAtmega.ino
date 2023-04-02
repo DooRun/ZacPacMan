@@ -146,135 +146,202 @@ bool SOUND_ENABLE = 1;  // Allows turning off the sound for night modes or other
 bool CHARACTER_ENABLE [6] = {1,1,1,1,1,1};  // Enable to light up charactors Pinky, Clyde, Cherries, PacMan, Blinky, Inky, respectively.
 int i;
 int j;
-byte PIN;
-byte TOGGLE;
+//----- COMMS VARIABLES -----//
+String MESSAGE_INCOMING = ""; 
+int message_length;
+int COMMAND_CAT;
+int MESSAGE_PART_LENGTH[99];
+char c;
+//----- end COMMS VARIABLES
 //----- end GENERAL VARIABLES
 
 //----- LIBRARIES start -----//
 #include <math.h>
-#include "FlickerController.h"
+//#include "FlickerController.h"
 #include <SoftwareSerial.h>    // Include software serial library, ESP8266 library dependency
 //----- end LIBRARIES
 
 //----- COMMUNICATIONS RELATED -----//
-long SERIAL_TIMEOUT = 150; // This is needed for serial read otherwise, may not read all the data.
+//const unsigned int MAX_MESSAGE_LENGTH = 100;
+long SERIAL_TIMEOUT = 250; // This is needed for serial read otherwise, may not read all the data.
 int data_count;                    // counter for number of characters stored or printed.
 unsigned char c;                   // char read by client from server http reply
-unsigned char data_line [701];     // this will be an array holding the invidiually read data points in ASCII value.
+unsigned char data_line [500];     // this will be an array holding the invidiually read data points in ASCII value.
 bool ESP_SPOKE;
-SoftwareSerial mySerial(0,1);  // RX,TX
+bool COMMAND_END_REACHED;  // When reading the serial message from ESP8266, will know command has ended when the period charachter is reached.
+String report;
+SoftwareSerial mySerial(7,8);  // RX,TX
   //  Arduino pin 0 (RX) to ESP8266 TX
   //  Arduino pin 1 to voltage divider then to ESP8266 RX
   //  Connect GND from the Arduiono to GND on the ESP8266
   //  Pull ESP8266 CH_PD HIGH
 //----- end COMMUNICATIONS RELATED
 
-FlickerController flicker_controller(PINS_FOR_FLICKER, NUMBER_OF_FLICKER_PINS);  //---Nick's program for flickering LEDs as if short circuiting.
+//FlickerController flicker_controller(PINS_FOR_FLICKER, NUMBER_OF_FLICKER_PINS);  //---Nick's program for flickering LEDs as if short circuiting.
 
 void setup() {
 
-  //Serial.begin(9600);
+  Serial.begin(9600);
   mySerial.begin(9600);   // Start the software serial for communication with the ESP8266
-  //Serial.println("Start setup");
+  Serial.println("Start setup");
   for(i=0; i<6; i+=1){pinMode(PINS_FOR_FLICKER[i],OUTPUT);}
   pinMode(13,OUTPUT); //---sound pin
   pinMode(PHOTO_RESISTOR, INPUT);
   pinMode(MOTION_PIN, INPUT);
-  flicker_controller.setup_controller();
-  //Startup_Sequence();
+  delay(2000);
+  Serial.println("++++++++++++++++1++++++++++++++++2++++++++++++++++3++++++++++++++++4");
+  //flicker_controller.setup_controller();
+/*  
+//---STARTUP SEQUENCE---///  //---eventually move to setup loop maybe
+  flicker_controller.do_flicker(true);
+  delay(2000);
+  flicker_controller.do_flicker(false);
+  delay(2000);
+  fade_out_one_LED();
+  delay(2000);
+  play_PacMan_intro_song(3);
+  delay(2000);
+  play_MsPacMan_intro_song(3);
+  delay(2000);
+  // Now fade in PacMan
+  byte j;
+  for (i = 0; i<=255; i=i+1)
+  {
+    //j = i + int ((i*i*i)/1000000) + int (abs(255-i)/100);
+    j = i + int(i^(3/5)) + int (abs(255-i)/50);
+    if(j>250){
+      j=255;
+      i=255;
+    }
+    analogWrite(PINS_FOR_FLICKER[3],j);
+    delay(66);
+  }
+  analogWrite(PINS_FOR_FLICKER[3],255);
+  // Now fade in the rest
+  for (i = 0; i<=255; i=i+1)  
+  {
+    //j = i + int((i*i*i)/1000000) + int (abs(255-i)/100);
+    j = i + int(i^(3/5)) + int (abs(255-i)/50);
+    if(j>250){
+      j=255;
+      i=255;
+    }
+    analogWrite(PINS_FOR_FLICKER[0],j);
+    analogWrite(PINS_FOR_FLICKER[1],j);
+    analogWrite(PINS_FOR_FLICKER[2],j);
+    analogWrite(PINS_FOR_FLICKER[4],j);
+    analogWrite(PINS_FOR_FLICKER[5],j);
+    delay(66);
+  }
+//---end STARTUP SEQUENCE*/
+  analogWrite(PINS_FOR_FLICKER[0],0);
+  analogWrite(PINS_FOR_FLICKER[1],0);
+  analogWrite(PINS_FOR_FLICKER[2],0);
+  analogWrite(PINS_FOR_FLICKER[3],0);
+  analogWrite(PINS_FOR_FLICKER[4],0);
+  analogWrite(PINS_FOR_FLICKER[5],0);
+  MESSAGE_PART_LENGTH[11] = 5;
+  MESSAGE_PART_LENGTH[12] = 5;
+  MESSAGE_PART_LENGTH[13] = 5;
+
 }
 
 void loop() {
+ //Check to see if anything is available in the serial receive buffer
+ while (mySerial.available() > 0)
+ {
+    ESP_SPOKE = true;
+    c = client.read();  // read a byte
+    MESSAGE_INCOMING += c;
+ }
+
+
+   //Read the next available byte in the serial receive buffer
+   char inByte = mySerial.read();
+
+   //Message coming in (check not terminating character) and guard for over message size
+   if (inByte != '.') // && (message_pos < MAX_MESSAGE_LENGTH - 1))  // inByte != '\n'  was original
+   {
+     //Add the incoming byte to our message
+     message[message_pos] = inByte;
+     //Serial.print(inByte);
+     message_pos++;
+     data_count = data_count + 1;
+     data_line [data_count] = mySerial.read();
+     ESP_SPOKE = true;
+   }
+   //Full message received...
+   else
+   {
+     //Add a carriage return to string
+     //message[message_pos] = '\n';
+
+     //Print the message (or do other things)
+     Serial.println(message);
+
+     //Or convert to interger and print    
+     //int number = atoi(message);
+     //Serial.println(number);
+     //Reset for the next message
+     message_pos = 0;
+   }
+ }
+}
 
   while (mySerial.available())
   {
       data_count = data_count + 1;
       data_line [data_count] = mySerial.read();
       ESP_SPOKE = true;
-      delay(1);
+      //delay(1);
   }
-  if(ESP_SPOKE == true)  
+  //Serial.print(data_count);
+
+  if(ESP_SPOKE == true)
   {
-    String report = "";  
-    for(int i=0; i<data_count + 1; i++)
-    {
-      report = report + char(data_line [i]);
-      //digitalWrite(PINS_FOR_FLICKER[3],1);
-      //delay(100);
-      //digitalWrite(PINS_FOR_FLICKER[3],0);
-      //delay(400);
-      }
-    //debug Serial.println(report);
-    byte START = report.indexOf('cmd:');
-    if (report.indexOf("GPIO 5 on") >= 0) {play_PacMan_intro_song(3);}
-    //debug Serial.println(START);
-    //String COMMAND = report.substring(START+4, START+5);
-    //debug Serial.print("command =  ");
-    //debug Serial.println(COMMAND);
-    //PIN = COMMAND.toInt();
-    /*for(int i=0; i<PIN + 1; i++)
-    {
-      digitalWrite(PINS_FOR_FLICKER[3],1);
-      delay(100);
-      digitalWrite(PINS_FOR_FLICKER[3],0);
-      delay(400);
-    }*/
-    //debug Serial.print("integer value of ASCII = ");
-    //debug Serial.print(PIN);
-    //debug Serial.println();
-    //debug Serial.println();
+    Serial.println("+++++++++++++++++");
+    for(int i=1; i<data_count + 1; i++){Serial.print(char(data_line [i]));}  
+    //delay(2000);
+    //Serial.println("A");  
+    //String report = "";  
+    //for(int i=1; i<data_count + 1; i++){report = report + char(data_line [i]);}
+    Serial.println("Report is...");
+    Serial.println(report);
+    //byte START = report.indexOf('GET');
+    //Serial.println(START);
+    //String COMMAND = report.substring(START-2, START+8);
+    //Serial.println("   Command is...");
+    //Serial.print ("  ");
+    //Serial.println(COMMAND);
+    //int PIN = COMMAND.toInt();
+    //Serial.print("integer value of ASCII is...");
+    //Serial.print(PIN);
+    Serial.println();
+    Serial.println("-------------------------");
+    Serial.println();
     //analogWrite(PINS_FOR_FLICKER[PIN],1); 
     //Serial.print("PIN =  ");
     //Serial.println(COMMAND);
     //Serial.println(PIN);   
-    //play_PacMan_intro_song(3);
-    TOGGLE = TOGGLE + 1;
-    if(TOGGLE ==2)
-    {
-      PIN = PIN + 1;
-      if(PIN==3){play_MsPacMan_intro_song(3);}
-      if(PIN==5){play_PacMan_intro_song(3);}
-      if(PIN>5){PIN=0;}
-      report = "";
-      data_count = 0;
-      digitalWrite(PINS_FOR_FLICKER[5],1);
-      delay(200);
-      //digitalWrite(13,1);
-      //digitalWrite(13,0);
-      digitalWrite(PINS_FOR_FLICKER[0],0);
-      digitalWrite(PINS_FOR_FLICKER[1],0);
-      digitalWrite(PINS_FOR_FLICKER[2],0);
-      digitalWrite(PINS_FOR_FLICKER[3],0);
-      digitalWrite(PINS_FOR_FLICKER[4],0);   
-      digitalWrite(PINS_FOR_FLICKER[5],0);    
-      digitalWrite(PINS_FOR_FLICKER[PIN],1);   
-      delay(1000);
-      if(PIN==4){}
-      
-      if(PIN<4)
-      {
-        digitalWrite(PINS_FOR_FLICKER[0],1);
-        digitalWrite(PINS_FOR_FLICKER[1],1);
-        digitalWrite(PINS_FOR_FLICKER[2],1);
-        digitalWrite(PINS_FOR_FLICKER[3],1);
-        digitalWrite(PINS_FOR_FLICKER[4],1);   
-        digitalWrite(PINS_FOR_FLICKER[5],1);
-      }
-      else
-      {
-        digitalWrite(PINS_FOR_FLICKER[0],0);
-        digitalWrite(PINS_FOR_FLICKER[1],0);
-        digitalWrite(PINS_FOR_FLICKER[2],0);
-        digitalWrite(PINS_FOR_FLICKER[3],0);
-        digitalWrite(PINS_FOR_FLICKER[4],0);   
-        digitalWrite(PINS_FOR_FLICKER[5],0);
-      }    
-      ESP_SPOKE = false; 
-      TOGGLE = 0;
-    }
-    else{}
+    //report = "";
+    //data_count = 0;
+    analogWrite(PINS_FOR_FLICKER[5],0);
+    delay(200);
+    analogWrite(PINS_FOR_FLICKER[5],1);
+    //digitalWrite(13,1);
+    //digitalWrite(13,0);
+/*    
+    analogWrite(PINS_FOR_FLICKER[0],0);
+    analogWrite(PINS_FOR_FLICKER[1],0);
+    analogWrite(PINS_FOR_FLICKER[2],0);
+    analogWrite(PINS_FOR_FLICKER[3],0);
+    analogWrite(PINS_FOR_FLICKER[4],0);    
+    analogWrite(PINS_FOR_FLICKER[PIN],1);  */  /*
+    ESP_SPOKE = false;
   }
-  delay(10);
+  data_count = 0;
+  report = "";
+  delay(1000);
 
   /*
   //..........process message from ESP8266 or Phone if present and respond with data if that is the plan..............
@@ -323,9 +390,9 @@ void loop() {
   }
   
   delay(40);
-*/
-}
 
+}
+*/
 
 void fade_out_one_LED(){
   int random_LED = random(0,6);
@@ -422,55 +489,4 @@ void play_MsPacMan_intro_song(byte added_divider) {
     for(int i=0; i<6; i+=1){digitalWrite(PINS_FOR_FLICKER[i],LOW);}
   //---end PLAY MsPACMAN INTRO SONG
   }
-}
-
-void Startup_Sequence()
-{
-  flicker_controller.do_flicker(true);
-  delay(2000);
-  flicker_controller.do_flicker(false);
-  delay(2000);
-  fade_out_one_LED();
-  delay(2000);
-  play_PacMan_intro_song(3);
-  delay(2000);
-  play_MsPacMan_intro_song(3);
-  delay(2000);
-  // Now fade in PacMan
-  byte j;
-  for (i = 0; i<=255; i=i+1)
-  {
-    //j = i + int ((i*i*i)/1000000) + int (abs(255-i)/100);
-    j = i + int(i^(3/5)) + int (abs(255-i)/50);
-    if(j>250){
-      j=255;
-      i=255;
-    }
-    analogWrite(PINS_FOR_FLICKER[3],j);
-    delay(66);
-  }
-  analogWrite(PINS_FOR_FLICKER[3],255);
-  // Now fade in the rest
-  for (i = 0; i<=255; i=i+1)  
-  {
-    //j = i + int((i*i*i)/1000000) + int (abs(255-i)/100);
-    j = i + int(i^(3/5)) + int (abs(255-i)/50);
-    if(j>250){
-      j=255;
-      i=255;
-    }
-    analogWrite(PINS_FOR_FLICKER[0],j);
-    analogWrite(PINS_FOR_FLICKER[1],j);
-    analogWrite(PINS_FOR_FLICKER[2],j);
-    analogWrite(PINS_FOR_FLICKER[4],j);
-    analogWrite(PINS_FOR_FLICKER[5],j);
-    delay(66);
-  }
-  //---end STARTUP SEQUENCE
-  digitalWrite(PINS_FOR_FLICKER[0],1);
-  digitalWrite(PINS_FOR_FLICKER[1],1);
-  digitalWrite(PINS_FOR_FLICKER[2],1);
-  digitalWrite(PINS_FOR_FLICKER[3],1);
-  digitalWrite(PINS_FOR_FLICKER[4],1);
-  digitalWrite(PINS_FOR_FLICKER[5],1);
 }

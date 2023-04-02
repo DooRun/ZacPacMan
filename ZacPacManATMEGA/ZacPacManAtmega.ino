@@ -162,7 +162,7 @@ byte TOGGLE;
 long SERIAL_TIMEOUT = 150; // This is needed for serial read otherwise, may not read all the data.
 //unsigned char c;                   // char read by client from server http reply
 bool ESP_SPOKE;
-SoftwareSerial mySerial(7,8);  // RX,TX
+SoftwareSerial mySerial(0,1);  // RX,TX
 String MESSAGE_INCOMING = ""; 
 int message_length;
 
@@ -236,8 +236,8 @@ void loop() {
   
     
     if(CMD_CAT_VAL == 11){if(CMD_VAL_VAL == 1){M_EN = 1;}else{M_EN = 0;}}  // Master enable
-    if(CMD_CAT_VAL == 12){if(CMD_VAL_VAL == 1){L_EN = 1;}else{L_EN = 0;}}  // Master enable
-    if(CMD_CAT_VAL == 13){if(CMD_VAL_VAL == 1){S_EN = 1;}else{S_EN = 0;}}  // Master enable
+    if(CMD_CAT_VAL == 12){if(CMD_VAL_VAL == 1){L_EN = 1;}else{S_EN = 0;}}  // Master enable
+    if(CMD_CAT_VAL == 13){if(CMD_VAL_VAL == 1){S_EN = 1;}else{L_EN = 0;}}  // Master enable
     int temp1 = M_EN * L_EN;
     digitalWrite(PINS_FOR_FLICKER[0], temp1);
     digitalWrite(PINS_FOR_FLICKER[1], 1 * M_EN * L_EN);

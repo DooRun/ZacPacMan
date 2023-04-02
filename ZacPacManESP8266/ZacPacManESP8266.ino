@@ -139,18 +139,26 @@ void loop(){
             
             // Web Page Heading
             client.println("<body><h1>ZachPACMAN</h1>");
-            client.println("<p>MASTER ENABLE IS...</p>");      
-            if (MESSAGE_TO_ATMEGA =="11:0"){client.println("<p><a href=\"11:1,\"><button class=\"button\">OFF</button></a></p>");}
-             else {client.println("<p><a href=\"11:0,\"><button class=\"button button2\">ON</button></a></p>");}
+            client.println("<p>MASTER ENABLE IS...</p>");   
+            if(MESSAGE_TO_ATMEGA.substring(0,2) == "11")
+            {
+              if (MESSAGE_TO_ATMEGA =="11:0"){client.println("<p><a href=\"11:1,\"><button class=\"button\">OFF</button></a></p>");}
+              else {client.println("<p><a href=\"11:0,\"><button class=\"button button2\">ON</button></a></p>");}
+            }   
                
-            client.println("<p>SOUND ENABLE IS...</p>");      
-            if (MESSAGE_TO_ATMEGA =="12:0"){client.println("<p><a href=\"12:1,\"><button class=\"button\">OFF</button></a></p>");}
-             else {client.println("<p><a href=\"12:0,\"><button class=\"button button2\">ON</button></a></p>");} 
-                           
-            client.println("<p>LIGHT ENABLE IS...</p>");      
-            if (MESSAGE_TO_ATMEGA =="13:0"){client.println("<p><a href=\"13:1,\"><button class=\"button\">OFF</button></a></p>");}
-             else {client.println("<p><a href=\"13:0,\"><button class=\"button button2\">ON</button></a></p>");} 
+            client.println("<p>SOUND ENABLE IS...</p>");    
+            if(MESSAGE_TO_ATMEGA.substring(0,2) == "12") 
+            { 
+              if (MESSAGE_TO_ATMEGA =="12:0"){client.println("<p><a href=\"12:1,\"><button class=\"button\">OFF</button></a></p>");}
+              else {client.println("<p><a href=\"12:0,\"><button class=\"button button2\">ON</button></a></p>");} 
+            }
 
+            client.println("<p>LIGHT ENABLE IS...</p>");   
+            if(MESSAGE_TO_ATMEGA.substring(0,2) == "13")
+            {   
+              if (MESSAGE_TO_ATMEGA =="13:0"){client.println("<p><a href=\"13:1,\"><button class=\"button\">OFF</button></a></p>");}
+              else {client.println("<p><a href=\"13:0,\"><button class=\"button button2\">ON</button></a></p>");} 
+            }
             MESSAGE_TO_ATMEGA = "";
             client.println("</body></html>");
             

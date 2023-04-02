@@ -165,8 +165,13 @@ bool ESP_SPOKE;
 SoftwareSerial mySerial(7,8);  // RX,TX
 String MESSAGE_INCOMING = ""; 
 int message_length;
-int COMMAND_CAT;
-int COMMAND_VALUE;
+
+String CMD_CAT_STRING;
+int CMD_CAT_VAL;
+
+String CMD_VAL_STRING;
+int CMD_VAL_VAL;
+
 int MESSAGE_PART_LENGTH[99];
   //  Arduino pin 0 (RX) to ESP8266 TX
   //  Arduino pin 1 to voltage divider then to ESP8266 RX
@@ -189,49 +194,62 @@ void setup() {
   MESSAGE_PART_LENGTH[11] = 5;
   MESSAGE_PART_LENGTH[12] = 5;
   MESSAGE_PART_LENGTH[13] = 5;
+  digitalWrite(PINS_FOR_FLICKER[0], 1);
+  digitalWrite(PINS_FOR_FLICKER[1], 1);
+  digitalWrite(PINS_FOR_FLICKER[2], 1);
+  digitalWrite(PINS_FOR_FLICKER[3], 1);
+  digitalWrite(PINS_FOR_FLICKER[4], 1);   
+  digitalWrite(PINS_FOR_FLICKER[5], 1); 
 }
 
 void loop() {
   //Check to see if anything is available in the serial receive buffer
   MESSAGE_INCOMING = "";
-  while (mySerial.available() > 0)
+  while (mySerial.available())
   {
-     ESP_SPOKE = true;
-     char c = mySerial.read();  // read a byte
-     //Serial.print(c);
-     MESSAGE_INCOMING += c;
+    delay(7);  // 5 seems to work.  I put it at 7.  If garbage is communicated, increase this value.  10 is shown online for a good value.
+    ESP_SPOKE = true;
+    while (mySerial.available() > 0)
+    {
+      char c = mySerial.read();  // read a byte
+      MESSAGE_INCOMING += c;
+    }
   }
 
   if(ESP_SPOKE == true)  
   {
-    //digitalWrite(13,1);
-    Serial.println("======");
-    Serial.println(MESSAGE_INCOMING);
-    COMMAND_CAT = "";  // reset
-    COMMAND_VALUE = 0; // reset
-    COMMAND_CAT = MESSAGE_INCOMING.indexOf(0,1);  // extract the COMMAND_CAT.
-    Serial.println(COMMAND_CAT);
-    message_length = MESSAGE_PART_LENGTH[COMMAND_CAT];
-    for (int i = 2; i<=message_length-1; i=i+1)  
-    {
-      COMMAND_VALUE = COMMAND_VALUE * 10 + (MESSAGE_INCOMING.indexOf(i,i+1) - 48);
-      Serial.print(COMMAND_VALUE);
-    }
+    CMD_CAT_STRING = "";  // reset
+    CMD_CAT_STRING = MESSAGE_INCOMING.substring(0,2);
+    CMD_CAT_VAL = CMD_CAT_STRING.toInt();
 
-    if(COMMAND_CAT == '11'){if(COMMAND_VALUE == 1){M_EN = 1;}else{M_EN = 0;}}  // Master enable
-    if(COMMAND_CAT == '12'){if(COMMAND_VALUE == 1){L_EN = 1;}else{L_EN = 0;}}  // Master enable
-    if(COMMAND_CAT == '13'){if(COMMAND_VALUE == 1){S_EN = 1;}else{S_EN = 0;}}  // Master enable
-
-    digitalWrite(PINS_FOR_FLICKER[0], 1 * M_EN * L_EN);
+    CMD_VAL_STRING = "";  // reset
+    CMD_VAL_STRING = MESSAGE_INCOMING.substring(4,MESSAGE_PART_LENGTH[CMD_CAT_VAL]-2);
+    CMD_VAL_VAL = CMD_VAL_STRING.toInt();
+     
+    Serial.println();
+    Serial.println("cmd_cat_val = ");
+    Serial.println(CMD_CAT_VAL);
+   
+    Serial.println();
+    Serial.println("cmd_val_val = ");
+    Serial.println(CMD_VAL_VAL);
+  
+    
+    if(CMD_CAT_VAL == 11){if(CMD_VAL_VAL == 1){M_EN = 1;}else{M_EN = 0;}}  // Master enable
+    if(CMD_CAT_VAL == 12){if(CMD_VAL_VAL == 1){L_EN = 1;}else{L_EN = 0;}}  // Master enable
+    if(CMD_CAT_VAL == 13){if(CMD_VAL_VAL == 1){S_EN = 1;}else{S_EN = 0;}}  // Master enable
+    int temp1 = M_EN * L_EN;
+    digitalWrite(PINS_FOR_FLICKER[0], temp1);
     digitalWrite(PINS_FOR_FLICKER[1], 1 * M_EN * L_EN);
     digitalWrite(PINS_FOR_FLICKER[2], 1 * M_EN * L_EN);
     digitalWrite(PINS_FOR_FLICKER[3], 1 * M_EN * L_EN);
     digitalWrite(PINS_FOR_FLICKER[4], 1 * M_EN * L_EN);   
-    digitalWrite(PINS_FOR_FLICKER[5], 1 * M_EN * L_EN); 
+    digitalWrite(PINS_FOR_FLICKER[5], 1 * M_EN * S_EN);   //change S_EN back to L_EN 
     ESP_SPOKE = false;
   }
-  delay(10);
-  //digitalWrite(13,0);
+  delay(5);
+  digitalWrite(13,M_EN);
+  Serial.flush();
 }
 
 

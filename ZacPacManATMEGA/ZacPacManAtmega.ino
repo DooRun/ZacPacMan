@@ -141,11 +141,12 @@ int DARK_TRIGGER = 500;  // Value below which room is considered dark (ROOM_DARK
 const int NUMBER_OF_FLICKER_PINS = 6;
 const int PINS_FOR_FLICKER[NUMBER_OF_FLICKER_PINS] = {11, 10, 9, 6, 5, 3};  // in order, Pinky, Clyde, Cherries, PacMan, Blinky, Inky.
 
-bool M_EN = 1; // Master enable:  Enables all lights and sound for all modes.
-bool L_EN = 1; // Light enable:  Enables all lights.
-bool S_EN = 1;  // Sound enable:  Enables sound (Allows for disableing sound for night modes or other times silence is desired).
+bool M_EN = 1;    // Master enable
+bool L_EN = 1;    // Light enable
+bool S_EN = 1;    // Sound enable
+bool MO_EN = 1;   // Motion enable
 bool CHAR_EN [6] = {1,1,1,1,1,1};  // Character enable: Enables lighting up charactors Pinky, Clyde, Cherries, PacMan, Blinky, Inky, respectively.
-bool CLCK_EN = 1;  // Clock enable.
+bool CLCK_EN = 1; // Clock enable
 int i;
 int j;
 byte PIN;
@@ -236,19 +237,19 @@ void loop() {
   
     
     if(CMD_CAT_VAL == 11){if(CMD_VAL_VAL == 1){M_EN = 1;}else{M_EN = 0;}}  // Master enable
-    if(CMD_CAT_VAL == 12){if(CMD_VAL_VAL == 1){L_EN = 1;}else{S_EN = 0;}}  // Master enable
-    if(CMD_CAT_VAL == 13){if(CMD_VAL_VAL == 1){S_EN = 1;}else{L_EN = 0;}}  // Master enable
+    if(CMD_CAT_VAL == 12){if(CMD_VAL_VAL == 1){L_EN = 1;}else{L_EN = 0;}}  // Master enable
+    if(CMD_CAT_VAL == 13){if(CMD_VAL_VAL == 1){S_EN = 1;}else{S_EN = 0;}}  // Master enable
     int temp1 = M_EN * L_EN;
     digitalWrite(PINS_FOR_FLICKER[0], temp1);
     digitalWrite(PINS_FOR_FLICKER[1], 1 * M_EN * L_EN);
     digitalWrite(PINS_FOR_FLICKER[2], 1 * M_EN * L_EN);
     digitalWrite(PINS_FOR_FLICKER[3], 1 * M_EN * L_EN);
     digitalWrite(PINS_FOR_FLICKER[4], 1 * M_EN * L_EN);   
-    digitalWrite(PINS_FOR_FLICKER[5], 1 * M_EN * S_EN);   //change S_EN back to L_EN 
+    digitalWrite(PINS_FOR_FLICKER[5], 1 * M_EN * L_EN);   //change S_EN back to L_EN 
     ESP_SPOKE = false;
   }
   delay(5);
-  digitalWrite(13,M_EN);
+  //digitalWrite(13,M_EN);
   Serial.flush();
 }
 

@@ -47,6 +47,11 @@ unsigned long previousTime = 0;
 // Define timeout time in milliseconds (example: 2000ms = 2s)
 const long timeoutTime = 4000;
 
+String M_EN_STATE = "ON";
+String S_EN_STATE = "ON";
+String L_EN_STATE = "ON";
+
+
 void setup() {
   Serial.begin(9600);
   MESSAGE_PART_LENGTH[11] = 5;
@@ -140,17 +145,27 @@ void loop(){
             // Web Page Heading
             client.println("<body><h1>ZachPACMAN</h1>");
 
+            if (MESSAGE_TO_ATMEGA =="11:0"){M_EN_STATE = "OFF";}
+            if (MESSAGE_TO_ATMEGA =="11:1"){M_EN_STATE = "ON";}
+            if (MESSAGE_TO_ATMEGA =="12:0"){L_EN_STATE = "OFF";}
+            if (MESSAGE_TO_ATMEGA =="12:1"){L_EN_STATE = "ON";}
+            if (MESSAGE_TO_ATMEGA =="13:0"){S_EN_STATE = "OFF";}
+            if (MESSAGE_TO_ATMEGA =="13:1"){S_EN_STATE = "ON";}
+
             client.println("<p>MASTER ENABLE IS...</p>");   
-            if (MESSAGE_TO_ATMEGA =="11:0"){client.println("<p><a href=\"11:1,\"><button class=\"button\">OFF</button></a></p>");}
-            else {client.println("<p><a href=\"11:0,\"><button class=\"button button2\">ON</button></a></p>");}
+            if (M_EN_STATE == "OFF"){client.println("<p><a href=\"11:1,\"><button class=\"button\">OFF</button></a></p>");}
+            if (M_EN_STATE == "ON"){client.println("<p><a href=\"11:0,\"><button class=\"button button2\">ON</button></a></p>");}
+            //else {client.println("<p><a href=\"11:0,\"><button class=\"button button2\">ON</button></a></p>");}
                
-            client.println("<p>SOUND ENABLE IS...</p>");    
-            if (MESSAGE_TO_ATMEGA =="12:0"){client.println("<p><a href=\"12:1,\"><button class=\"button\">OFF</button></a></p>");}
-            else {client.println("<p><a href=\"12:0,\"><button class=\"button button2\">ON</button></a></p>");} 
+            client.println("<p>LIGHT ENABLE IS...</p>");    
+            if (L_EN_STATE == "OFF"){client.println("<p><a href=\"12:1,\"><button class=\"button\">OFF</button></a></p>");}
+            if (L_EN_STATE == "ON"){client.println("<p><a href=\"12:0,\"><button class=\"button button2\">ON</button></a></p>");}
+            //else {client.println("<p><a href=\"12:0,\"><button class=\"button button2\">ON</button></a></p>");} 
           
-            client.println("<p>LIGHT ENABLE IS...</p>");   
-            if (MESSAGE_TO_ATMEGA =="13:0"){client.println("<p><a href=\"13:1,\"><button class=\"button\">OFF</button></a></p>");}
-            else {client.println("<p><a href=\"13:0,\"><button class=\"button button2\">ON</button></a></p>");} 
+            client.println("<p>SOUND ENABLE IS...</p>");   
+            if (S_EN_STATE == "OFF"){client.println("<p><a href=\"13:1,\"><button class=\"button\">OFF</button></a></p>");}
+            if (S_EN_STATE == "ON"){client.println("<p><a href=\"13:0,\"><button class=\"button button2\">ON</button></a></p>");}
+            //else {client.println("<p><a href=\"13:0,\"><button class=\"button button2\">ON</button></a></p>");} 
             
             MESSAGE_TO_ATMEGA = "";
             client.println("</body></html>");

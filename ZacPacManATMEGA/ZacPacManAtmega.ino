@@ -125,28 +125,39 @@ int divider = 0, noteDuration = 0;
 //----- end PACMAN AND MS PACMAN SONG INFO
 
 //----- GENERAL VARIABLES -----//
-//----- MOTION VARIABLES -----//
-const int MOTION_PIN = A4;    // motion detector
+
+//----- MOTION RELATED -----//
+const int MOTION_PIN = A4; // motion detector
 bool MOTION_DETECTED;
 bool MOTION_DETECTED_HOLD;
 const int MOTION_LIGHT_DURATION = 5000;    // duration of shelf lit after motion detected.
 unsigned long MOTION_OFF_TIME;
-//----- end MOTION VARIABLES
-//----- ROOM BRIGHTNESS VARIABLES -----//
+//----- end MOTION RELATED
+
+//----- LIGHT SENSOR RELATED -----//
 const int PHOTO_RESISTOR = A5; // photoresistor for shop brightness (input)
 int ROOM_LIGHT;  // value of current room light
 bool ROOM_DARK;
 int DARK_TRIGGER = 500;  // Value below which room is considered dark (ROOM_DARK IS THEN SET TO 1)
+//----- end LIGHT SENSOR RELATED
 
 const int NUMBER_OF_FLICKER_PINS = 6;
 const int PINS_FOR_FLICKER[NUMBER_OF_FLICKER_PINS] = {11, 10, 9, 6, 5, 3};  // in order, Pinky, Clyde, Cherries, PacMan, Blinky, Inky.
+bool M_EN = 1;    // Master enable   11
+bool L_EN = 1;    // Light  enable   12
+bool S_EN = 1;    // Sound  enable   13
+bool MO_EN = 1;   // Motion enable   14
+bool CL_EN = 1;   // Clock  enable   15
+bool PIN_EN = 1;  // PINKY  enable   16
+bool CLY_EN = 1;  // CLYDE  enable   17
+bool CHE_EN = 1;  // CHERRY enable   18
+bool PAC_EN = 1;  // PACMAN enable   19
+bool BLI_EN = 1;  // BLINKY enable   20
+bool INK_EN = 1;  // INKY   enable   21
+bool LS_EN = 1;   // LIGHT SENSOR enable 22
+//  DARK_TRIGGER DEFINE ABOVE IS 23
+int PERF_NUM = 0; // PERFORMANCE NUMBER (to trigger events like PACMAN or MSPACMAN songs) 24
 
-bool M_EN = 1;    // Master enable
-bool L_EN = 1;    // Light enable
-bool S_EN = 1;    // Sound enable
-bool MO_EN = 1;   // Motion enable
-bool CHAR_EN [6] = {1,1,1,1,1,1};  // Character enable: Enables lighting up charactors Pinky, Clyde, Cherries, PacMan, Blinky, Inky, respectively.
-bool CLCK_EN = 1; // Clock enable
 int i;
 int j;
 byte PIN;
@@ -159,25 +170,23 @@ byte TOGGLE;
 #include <SoftwareSerial.h>    // Include software serial library, ESP8266 library dependency
 //----- end LIBRARIES
 
-//----- COMMUNICATIONS RELATED -----//
-long SERIAL_TIMEOUT = 150; // This is needed for serial read otherwise, may not read all the data.
-//unsigned char c;                   // char read by client from server http reply
-bool ESP_SPOKE;
-SoftwareSerial mySerial(0,1);  // RX,TX
-String MESSAGE_INCOMING = ""; 
-int message_length;
-
-String CMD_CAT_STRING;
-int CMD_CAT_VAL;
-
-String CMD_VAL_STRING;
-int CMD_VAL_VAL;
-
-int MESSAGE_PART_LENGTH[99];
+//----- COMMUNICATIONS RELATED -----//  
   //  Arduino pin 0 (RX) to ESP8266 TX
   //  Arduino pin 1 to voltage divider then to ESP8266 RX
   //  Connect GND from the Arduiono to GND on the ESP8266
   //  Pull ESP8266 CH_PD HIGH
+SoftwareSerial mySerial(0,1);  // RX,TX
+long SERIAL_TIMEOUT = 150; // This is needed for serial read otherwise, may not read all the data.
+bool ESP_SPOKE;
+String MESSAGE_INCOMING = ""; 
+int message_length;
+String CMD_CAT_STRING;  // <== command_category_string
+int CMD_CAT_VAL;        // <== command_category_value
+String CMD_VAL_STRING;  // <== command_value_string
+int CMD_VAL_VAL;        // <== command_value_value
+
+int MESSAGE_PART_LENGTH[99];
+
 //----- end COMMUNICATIONS RELATED
 
 FlickerController flicker_controller(PINS_FOR_FLICKER, NUMBER_OF_FLICKER_PINS);  //---Nick's program for flickering LEDs as if short circuiting.
@@ -185,16 +194,28 @@ FlickerController flicker_controller(PINS_FOR_FLICKER, NUMBER_OF_FLICKER_PINS); 
 void setup() {
   Serial.begin(9600);
   mySerial.begin(9600);   // Start the software serial for communication with the ESP8266
-  //Serial.println("Start setup");
+  //debugSerial.println("Start setup");
   for(i=0; i<6; i+=1){pinMode(PINS_FOR_FLICKER[i],OUTPUT);}
   pinMode(13,OUTPUT); //---sound pin
   pinMode(PHOTO_RESISTOR, INPUT);
   pinMode(MOTION_PIN, INPUT);
   flicker_controller.setup_controller();
-  //Startup_Sequence();
-  MESSAGE_PART_LENGTH[11] = 5;
-  MESSAGE_PART_LENGTH[12] = 5;
-  MESSAGE_PART_LENGTH[13] = 5;
+  //debugStartup_Sequence();
+  MESSAGE_PART_LENGTH[11] = 5;  // Master enable
+  MESSAGE_PART_LENGTH[12] = 5;  // Light enable
+  MESSAGE_PART_LENGTH[13] = 5;  // Sound enable
+  MESSAGE_PART_LENGTH[14] = 5;  // Motion enable
+  MESSAGE_PART_LENGTH[15] = 5;  // Clock enable
+  MESSAGE_PART_LENGTH[16] = 5;  // Light Pinky  PIN
+  MESSAGE_PART_LENGTH[17] = 5;  // Light Clyde  CLY
+  MESSAGE_PART_LENGTH[18] = 5;  // Light Cherry CHE
+  MESSAGE_PART_LENGTH[19] = 5;  // Light PacMan PAC
+  MESSAGE_PART_LENGTH[20] = 5;  // Light Blinky BLI
+  MESSAGE_PART_LENGTH[21] = 5;  // Light Inky   INK
+  MESSAGE_PART_LENGTH[22] = 5;  // Light Sensor enable
+  MESSAGE_PART_LENGTH[23] = 8;  // Light Sensor trigger value
+  MESSAGE_PART_LENGTH[24] = 6;  // Performance number
+
   digitalWrite(PINS_FOR_FLICKER[0], 1);
   digitalWrite(PINS_FOR_FLICKER[1], 1);
   digitalWrite(PINS_FOR_FLICKER[2], 1);
@@ -204,9 +225,9 @@ void setup() {
 }
 
 void loop() {
-  //Check to see if anything is available in the serial receive buffer
+  //---OBTAIN MESSAGE FROM ESP8266---//
   MESSAGE_INCOMING = "";
-  while (mySerial.available())
+  while (mySerial.available())  // read any serial buffer data.
   {
     delay(7);  // 5 seems to work.  I put it at 7.  If garbage is communicated, increase this value.  10 is shown online for a good value.
     ESP_SPOKE = true;
@@ -216,7 +237,11 @@ void loop() {
       MESSAGE_INCOMING += c;
     }
   }
+  Serial.flush();
+  //---end OBTAIN MESSAGE FROM ESP8266
 
+
+  //---UPDATE VARIABLES IF MESSAGE WAS RECEIVED---//
   if(ESP_SPOKE == true)  
   {
     CMD_CAT_STRING = "";  // reset
@@ -235,139 +260,33 @@ void loop() {
     Serial.println("cmd_val_val = ");
     Serial.println(CMD_VAL_VAL);
   
-    
     if(CMD_CAT_VAL == 11){if(CMD_VAL_VAL == 1){M_EN = 1;}else{M_EN = 0;}}  // Master enable
-    if(CMD_CAT_VAL == 12){if(CMD_VAL_VAL == 1){L_EN = 1;}else{L_EN = 0;}}  // Master enable
-    if(CMD_CAT_VAL == 13){if(CMD_VAL_VAL == 1){S_EN = 1;}else{S_EN = 0;}}  // Master enable
-    int temp1 = M_EN * L_EN;
-    digitalWrite(PINS_FOR_FLICKER[0], temp1);
-    digitalWrite(PINS_FOR_FLICKER[1], 1 * M_EN * L_EN);
-    digitalWrite(PINS_FOR_FLICKER[2], 1 * M_EN * L_EN);
-    digitalWrite(PINS_FOR_FLICKER[3], 1 * M_EN * L_EN);
-    digitalWrite(PINS_FOR_FLICKER[4], 1 * M_EN * L_EN);   
-    digitalWrite(PINS_FOR_FLICKER[5], 1 * M_EN * L_EN);   //change S_EN back to L_EN 
+    if(CMD_CAT_VAL == 12){if(CMD_VAL_VAL == 1){L_EN = 1;}else{L_EN = 0;}}  // Light enable
+    if(CMD_CAT_VAL == 13){if(CMD_VAL_VAL == 1){S_EN = 1;}else{S_EN = 0;}}  // Sound enable
+    if(CMD_CAT_VAL == 14){if(CMD_VAL_VAL == 1){MO_EN = 1;}else{MO_EN = 0;}}  // Motion enable
+    if(CMD_CAT_VAL == 15){if(CMD_VAL_VAL == 1){CL_EN = 1;}else{CL_EN = 0;}}  // Clock enable
+    if(CMD_CAT_VAL == 16){if(CMD_VAL_VAL == 1){PIN_EN = 1;}else{PIN_EN = 0;}}  // Light Pinky  PIN flickerPin0
+    if(CMD_CAT_VAL == 17){if(CMD_VAL_VAL == 1){CLY_EN = 1;}else{CLY_EN = 0;}}  // Light Clyde  CLY flickerPin1
+    if(CMD_CAT_VAL == 18){if(CMD_VAL_VAL == 1){CHE_EN = 1;}else{CHE_EN = 0;}}  // Light Cherry CHE flickerPin2
+    if(CMD_CAT_VAL == 19){if(CMD_VAL_VAL == 1){PAC_EN = 1;}else{PAC_EN = 0;}}  // Light PacMan PAC flickerPin3
+    if(CMD_CAT_VAL == 20){if(CMD_VAL_VAL == 1){BLI_EN = 1;}else{BLI_EN = 0;}}  // Light Blinky BLI flickerPin4
+    if(CMD_CAT_VAL == 21){if(CMD_VAL_VAL == 1){INK_EN = 1;}else{INK_EN = 0;}}  // Light Inky   INK flickerPin5
+    if(CMD_CAT_VAL == 22){if(CMD_VAL_VAL == 1){LS_EN = 1;}else{LS_EN = 0;}}  // LIGHT SENSOR enable
+    if(CMD_CAT_VAL == 23){DARK_TRIGGER = CMD_CAT_VAL;}  // Light sensor trigger value
+    if(CMD_CAT_VAL == 24){PERF_NUM = CMD_CAT_VAL;}      // Performance number
+       
     ESP_SPOKE = false;
   }
+  //---end UPDATE VARIABLES IF MESSAGE WAS RECEIVED
+  
   delay(5);
-  //digitalWrite(13,M_EN);
-  Serial.flush();
-}
-
-
-/*
-    c = client.read();  // read a byte
-    MESSAGE_TO_ATMEGA += c;
-    Serial.write(c);
-    COMMAND_CAT += c - 48;
-    message_length = MESSAGE_PART_LENGTH[COMMAND_CAT];
-    for(int i=0; i<data_count + 1; i++)
-    {
-      COMMAND_VALUE = COMMAND_VALUE * 10 + 
-      report = report + char(data_line [i]);
-      //digitalWrite(PINS_FOR_FLICKER[3],1);
-      //delay(100);
-      //digitalWrite(PINS_FOR_FLICKER[3],0);
-      //delay(400);
-      }
-    //debug Serial.println(report);
-    byte START = report.indexOf('cmd:');
-    if (report.indexOf("GPIO 5 on") >= 0) {play_PacMan_intro_song(3);}
-    //debug Serial.println(START);
-    //String COMMAND = report.substring(START+4, START+5);
-    //debug Serial.print("command =  ");
-    //debug Serial.println(COMMAND);
-    //PIN = COMMAND.toInt();
-    /*for(int i=0; i<PIN + 1; i++)
-    {
-      digitalWrite(PINS_FOR_FLICKER[3],1);
-      delay(100);
-      digitalWrite(PINS_FOR_FLICKER[3],0);
-      delay(400);
-    }*/
-    //debug Serial.print("integer value of ASCII = ");
-    //debug Serial.print(PIN);
-    //debug Serial.println();
-    //debug Serial.println();
-    //analogWrite(PINS_FOR_FLICKER[PIN],1); 
-    //Serial.print("PIN =  ");
-    //Serial.println(COMMAND);
-    //Serial.println(PIN);   
-    //play_PacMan_intro_song(3);
-    /*TOGGLE = TOGGLE + 1;
-    if(TOGGLE ==2)
-    {
-      PIN = PIN + 1;
-      if(PIN==3){play_MsPacMan_intro_song(3);}
-      if(PIN==5){play_PacMan_intro_song(3);}
-      if(PIN>5){PIN=0;}
-      report = "";
-      data_count = 0;
-      digitalWrite(PINS_FOR_FLICKER[5],1);
-      delay(200);
-      //digitalWrite(13,1);
-      //digitalWrite(13,0);
-      digitalWrite(PINS_FOR_FLICKER[0],0);
-      digitalWrite(PINS_FOR_FLICKER[1],0);
-      digitalWrite(PINS_FOR_FLICKER[2],0);
-      digitalWrite(PINS_FOR_FLICKER[3],0);
-      digitalWrite(PINS_FOR_FLICKER[4],0);   
-      digitalWrite(PINS_FOR_FLICKER[5],0);    
-      digitalWrite(PINS_FOR_FLICKER[PIN],1);   
-      delay(1000);
-      if(PIN==4){}
-      
-      if(PIN<4)
-      {
-        digitalWrite(PINS_FOR_FLICKER[0],1);
-        digitalWrite(PINS_FOR_FLICKER[1],1);
-        digitalWrite(PINS_FOR_FLICKER[2],1);
-        digitalWrite(PINS_FOR_FLICKER[3],1);
-        digitalWrite(PINS_FOR_FLICKER[4],1);   
-        digitalWrite(PINS_FOR_FLICKER[5],1);
-      }
-      else
-      {
-        digitalWrite(PINS_FOR_FLICKER[0],0);
-        digitalWrite(PINS_FOR_FLICKER[1],0);
-        digitalWrite(PINS_FOR_FLICKER[2],0);
-        digitalWrite(PINS_FOR_FLICKER[3],0);
-        digitalWrite(PINS_FOR_FLICKER[4],0);   
-        digitalWrite(PINS_FOR_FLICKER[5],0);
-      }    
-      ESP_SPOKE = false; 
-      TOGGLE = 0;
-    }
-    else{}
-  }
-}
-  delay(10);
-
-  /*
-  //..........process message from ESP8266 or Phone if present and respond with data if that is the plan..............
+  //-----PLAY SELECTED PERFORMANCE-----//
+  if((CMD_CAT_VAL == 11) && (CMD_VAL_VAL ==1)){play_PacMan_intro_song(3); PERF_NUM = 0;CMD_CAT_VAL=0;}
+  if(PERF_NUM == 72){play_MsPacMan_intro_song(3); PERF_NUM = 0;}
+  //-----end PLAY SELECTED PERFORMANCE
   
-  //..........measure room brightness.................................................................................
-  //..........check for/react to motion at all sensors................................................................
-  */
-  
-  //..........process message from ESP8266 or Phone if present and respond with data if that is the plan.......................
-  //--- READ/STORE WANTED DATA FROM ESP8266 IF IT EXISTS ---//
-  /*long lastTimeSerialAvailable = millis();
-  while (millis() - lastTimeSerialAvailable < SERIAL_TIMEOUT)
-  {
-      while (mySerial.available())
-      {
-          //digitalWrite(LED_orange_pin, HIGH);
-          data_count += 1;
-          lastTimeSerialAvailable = millis();
-          data_line [data_count] = mySerial.read();
-      }
-  }
-
-
-  //--- end READ/STORE WANTED DATA FROM ESP8266 IF IT EXISTS
-    
   //----- RESPOND TO ESP8266 -----//
-  mySerial.print("THANKS FROM PACMAN"); // ESP8266 will request next node.js string of data if it sees anything come in on RX pin.  "T" is for 'thanks' but it could be anything.
+  //mySerial.print("THANKS FROM PACMAN"); // ESP8266 will request next node.js string of data if it sees anything come in on RX pin.  "T" is for 'thanks' but it could be anything.
   //-----end RESPOND TO ESP8266
 
   //..........measure room brightness.................................................................................
@@ -375,21 +294,27 @@ void loop() {
   if(ROOM_LIGHT < DARK_TRIGGER){ROOM_DARK = 1;}else{ROOM_DARK = 0;}
  
   //..........check for motion at all sensors................................................................
+  /*
   MOTION_DETECTED = digitalRead(MOTION_PIN);
   if(MOTION_DETECTED == 1){
     MOTION_DETECTED_HOLD = 1;
     MOTION_OFF_TIME = millis() + MOTION_LIGHT_DURATION;
   }
-  if(MOTION_OFF_TIME < millis()){analogWrite(PINS_FOR_FLICKER[5],0);}
+  if(MOTION_OFF_TIME < millis()){MO_EN = O;}else{MO_EN = 1}
+  */
+  if(ROOM_DARK == 0){analogWrite(PINS_FOR_FLICKER[3],255);}else{analogWrite(PINS_FOR_FLICKER[3],0);}
+  if(MOTION_DETECTED == 1){analogWrite(PINS_FOR_FLICKER[5],255);}
+
+
+  digitalWrite(PINS_FOR_FLICKER[0], 1 * M_EN * L_EN * PIN_EN);
+  digitalWrite(PINS_FOR_FLICKER[1], 1 * M_EN * L_EN * CLY_EN);
+  digitalWrite(PINS_FOR_FLICKER[2], 1 * M_EN * L_EN * CHE_EN);
+  digitalWrite(PINS_FOR_FLICKER[3], 1 * M_EN * L_EN * PAC_EN);
+  digitalWrite(PINS_FOR_FLICKER[4], 1 * M_EN * L_EN * BLI_EN);   
+  digitalWrite(PINS_FOR_FLICKER[5], 1 * M_EN * L_EN * INK_EN); 
   
-  if(MASTER_ON == 1)
-  {
-    if(ROOM_DARK == 0){analogWrite(PINS_FOR_FLICKER[3],255);}else{analogWrite(PINS_FOR_FLICKER[3],0);}
-    if(MOTION_DETECTED == 1){analogWrite(PINS_FOR_FLICKER[5],255);}
-  }
-  
-  delay(40);
-*/
+  delay(5);
+}
 
 
 

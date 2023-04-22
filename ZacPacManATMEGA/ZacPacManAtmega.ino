@@ -175,7 +175,7 @@ byte TOGGLE;
   //  Arduino pin 1 to voltage divider then to ESP8266 RX
   //  Connect GND from the Arduiono to GND on the ESP8266
   //  Pull ESP8266 CH_PD HIGH
-SoftwareSerial mySerial(0,1);  // RX,TX
+SoftwareSerial mySerial(0,1);  // RX,TX  (7,8 FOR arduino board but NOT FOR ATMEGA CHIP!!! WHICH IS 0,1)
 long SERIAL_TIMEOUT = 150; // This is needed for serial read otherwise, may not read all the data.
 bool ESP_SPOKE;
 String MESSAGE_INCOMING = ""; 
@@ -188,6 +188,8 @@ int CMD_VAL_VAL;        // <== command_value_value
 int MESSAGE_PART_LENGTH[99];
 
 //----- end COMMUNICATIONS RELATED
+
+bool state = 0;
 
 FlickerController flicker_controller(PINS_FOR_FLICKER, NUMBER_OF_FLICKER_PINS);  //---Nick's program for flickering LEDs as if short circuiting.
 
@@ -224,7 +226,8 @@ void setup() {
   digitalWrite(PINS_FOR_FLICKER[5], 1); 
 }
 
-void loop() {
+void loop() 
+{
   //---OBTAIN MESSAGE FROM ESP8266---//
   MESSAGE_INCOMING = "";
   while (mySerial.available())  // read any serial buffer data.
@@ -237,19 +240,22 @@ void loop() {
       MESSAGE_INCOMING += c;
     }
   }
-  Serial.flush();
+  mySerial.flush();
   //---end OBTAIN MESSAGE FROM ESP8266
-
 
   //---UPDATE VARIABLES IF MESSAGE WAS RECEIVED---//
   if(ESP_SPOKE == true)  
   {
+    state = !state;
+    if(state == 1){digitalWrite(PINS_FOR_FLICKER[3],HIGH);}else{digitalWrite(PINS_FOR_FLICKER[3],LOW);} 
+  
+  
     CMD_CAT_STRING = "";  // reset
     CMD_CAT_STRING = MESSAGE_INCOMING.substring(0,2);
     CMD_CAT_VAL = CMD_CAT_STRING.toInt();
 
     CMD_VAL_STRING = "";  // reset
-    CMD_VAL_STRING = MESSAGE_INCOMING.substring(4,MESSAGE_PART_LENGTH[CMD_CAT_VAL]-2);
+    CMD_VAL_STRING = MESSAGE_INCOMING.substring(3,MESSAGE_PART_LENGTH[CMD_CAT_VAL]-1);  //was (4...-2)
     CMD_VAL_VAL = CMD_VAL_STRING.toInt();
      
     Serial.println();
@@ -267,7 +273,7 @@ void loop() {
     if(CMD_CAT_VAL == 15){if(CMD_VAL_VAL == 1){CL_EN = 1;}else{CL_EN = 0;}}  // Clock enable
     if(CMD_CAT_VAL == 16){if(CMD_VAL_VAL == 1){PIN_EN = 1;}else{PIN_EN = 0;}}  // Light Pinky  PIN flickerPin0
     if(CMD_CAT_VAL == 17){if(CMD_VAL_VAL == 1){CLY_EN = 1;}else{CLY_EN = 0;}}  // Light Clyde  CLY flickerPin1
-    if(CMD_CAT_VAL == 18){if(CMD_VAL_VAL == 1){CHE_EN = 1;}else{CHE_EN = 0;}}  // Light Cherry CHE flickerPin2
+    if(CMD_CAT_VAL == 16){if(CMD_VAL_VAL == 1){CHE_EN = 1;}else{CHE_EN = 0;}}  // Light Cherry CHE flickerPin2
     if(CMD_CAT_VAL == 19){if(CMD_VAL_VAL == 1){PAC_EN = 1;}else{PAC_EN = 0;}}  // Light PacMan PAC flickerPin3
     if(CMD_CAT_VAL == 20){if(CMD_VAL_VAL == 1){BLI_EN = 1;}else{BLI_EN = 0;}}  // Light Blinky BLI flickerPin4
     if(CMD_CAT_VAL == 21){if(CMD_VAL_VAL == 1){INK_EN = 1;}else{INK_EN = 0;}}  // Light Inky   INK flickerPin5
@@ -277,7 +283,7 @@ void loop() {
        
     ESP_SPOKE = false;
   }
-  //---end UPDATE VARIABLES IF MESSAGE WAS RECEIVED
+  //---end UPDATE VARIABLES IF MESSAGE WAS RECEIVED  }
   
   delay(5);
   //-----PLAY SELECTED PERFORMANCE-----//

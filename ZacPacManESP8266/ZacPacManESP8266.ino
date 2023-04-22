@@ -113,9 +113,9 @@ void loop(){
             c = client.read();    // read a byte         
             if(c == 'T') //GET is found
             {
-              c = client.read();  // read a byte
-              c = client.read();  // read a byte
+              c = client.read();  // read a byte to get past a space
               c = client.read();  // read another byte to get past the '/'
+              c = client.read();  // read the first byte of interest, i.e., the first byte of the two digit command category.
               MESSAGE_TO_ATMEGA += c;
               Serial.write(c);
               COMMAND_CAT = (c - 48)*10;
@@ -124,7 +124,7 @@ void loop(){
               MESSAGE_TO_ATMEGA += c;
               Serial.write(c);
               COMMAND_CAT += c - 48;
-              message_length = MESSAGE_PART_LENGTH[COMMAND_CAT];
+              message_length = MESSAGE_PART_LENGTH[COMMAND_CAT];  // this determines the length of the command's value and set limit to # of reads below.
 
               //header = 'GET'
               for (int i = 0; i<=message_length-4; i=i+1)

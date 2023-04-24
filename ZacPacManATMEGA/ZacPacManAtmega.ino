@@ -189,8 +189,6 @@ int MESSAGE_PART_LENGTH[99];
 
 //----- end COMMUNICATIONS RELATED
 
-bool state = 0;
-
 FlickerController flicker_controller(PINS_FOR_FLICKER, NUMBER_OF_FLICKER_PINS);  //---Nick's program for flickering LEDs as if short circuiting.
 
 void setup() {
@@ -246,10 +244,7 @@ void loop()
   //---UPDATE VARIABLES IF MESSAGE WAS RECEIVED---//
   if(ESP_SPOKE == true)  
   {
-    state = !state;
-    if(state == 1){digitalWrite(PINS_FOR_FLICKER[3],HIGH);}else{digitalWrite(PINS_FOR_FLICKER[3],LOW);} 
-  
-  
+      
     CMD_CAT_STRING = "";  // reset
     CMD_CAT_STRING = MESSAGE_INCOMING.substring(0,2);
     CMD_CAT_VAL = CMD_CAT_STRING.toInt();
@@ -273,7 +268,7 @@ void loop()
     if(CMD_CAT_VAL == 15){if(CMD_VAL_VAL == 1){CL_EN = 1;}else{CL_EN = 0;}}  // Clock enable
     if(CMD_CAT_VAL == 16){if(CMD_VAL_VAL == 1){PIN_EN = 1;}else{PIN_EN = 0;}}  // Light Pinky  PIN flickerPin0
     if(CMD_CAT_VAL == 17){if(CMD_VAL_VAL == 1){CLY_EN = 1;}else{CLY_EN = 0;}}  // Light Clyde  CLY flickerPin1
-    if(CMD_CAT_VAL == 16){if(CMD_VAL_VAL == 1){CHE_EN = 1;}else{CHE_EN = 0;}}  // Light Cherry CHE flickerPin2
+    if(CMD_CAT_VAL == 18){if(CMD_VAL_VAL == 1){CHE_EN = 1;}else{CHE_EN = 0;}}  // Light Cherry CHE flickerPin2
     if(CMD_CAT_VAL == 19){if(CMD_VAL_VAL == 1){PAC_EN = 1;}else{PAC_EN = 0;}}  // Light PacMan PAC flickerPin3
     if(CMD_CAT_VAL == 20){if(CMD_VAL_VAL == 1){BLI_EN = 1;}else{BLI_EN = 0;}}  // Light Blinky BLI flickerPin4
     if(CMD_CAT_VAL == 21){if(CMD_VAL_VAL == 1){INK_EN = 1;}else{INK_EN = 0;}}  // Light Inky   INK flickerPin5

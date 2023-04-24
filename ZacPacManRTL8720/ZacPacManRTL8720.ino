@@ -1,28 +1,13 @@
-//  ZacPacMan8266
-
-/*    
- * ESP8266 module supporing PacManAtmega.
- * This code will configure ESP8266 in station mode which will then connect with a local WIFI network. 
- * But if unable to connect to local WIFI network, it creates its own network.
- * Some ESP8266 generated website code taken form Rui Santos---https://randomnerdtutorials.com  
-*/
-
-// Load Wi-Fi library
-#include <ESP8266WiFi.h>
-
-const char* ssid     = "007";
-const char* password = "skyfall1";
-//const char* ssid     = "DaveCave";
-//const char* password = "ladytheresabasketballinmypudding";
-
-// Set web server port number to 80
-WiFiServer server(80);
-
-
+//***** ZacPacManRTL8720 *****//
+//  This is the code for the wireless modcule RTL8720DN_BW16
+//  It acts a server to create an html page for clients to control the ZacPacMan Shelf
+//  After a client loads the webpage on their device, a click on a button will generate a GET request to the ZacPacMan RTL8720DN_BW16 module
+//  The RTL8720DN_BW16 module code (below) extracts the command after "GET" is found and then sens the command via serial communication to the ZacPacMan Atmega
+//  
 /* Command reference guide:
-  1  11:#,Everything Enable,
-  2  12:#,Sound Enable,
-  3  13:#,Light Enable,
+  11:#,Everything Enable,
+  12:#,Sound Enable,
+  13:#,Light Enable,
   14:#,Motion Enable,
   15:#,Clock Enable,
   16:####,Room Light Sensor Trigger Value,
@@ -34,35 +19,59 @@ WiFiServer server(80);
   22:#,Light Blinky,
   23:#,Light Inky.
 */
+
+#include <WiFi.h>
+
+char ssid[] = "007";    // your network SSID (name)
+char pass[] = "skyfall1";       // your network password
+//int keyIndex = 0;               // your network key Index number (needed only for WEP)
+//const char* ssid     = "DaveCave";
+//const char* password = "ladytheresabasketballinmypudding";
+//int keyIndex = 0;               // your network key Index number (needed only for WEP)
+
+byte status = WL_IDLE_STATUS;
+
+WiFiServer server(80);
  
 String MESSAGE_TO_ATMEGA = ""; 
-int message_length;
-int COMMAND_CAT;
-int MESSAGE_PART_LENGTH[99];
+byte message_length;
+byte max_message_length = 8;
+byte COMMAND_CAT;
+bool currentLineIsBlank;
+bool message_processed;
+byte MESSAGE_PART_LENGTH[99];
 
-// Current time
-unsigned long currentTime = millis();
-// Previous time
-unsigned long previousTime = 0; 
-// Define timeout time in milliseconds (example: 2000ms = 2s)
-const long timeoutTime = 4000;
+unsigned long currentTime = millis();  // Current time
+unsigned long previousTime = 0; // Previous time
+const long timeoutTime = 4000; // Define timeout time in milliseconds (example: 2000ms = 2s)
 
-String M_EN_STATE = "MASTER ON ";     // Master enable
-String S_EN_STATE = "SOUND ON ";      // Light enable
-String L_EN_STATE = "LIGHT ON ";      // Sound enable
-String MO_EN_STATE = "MOTION ON ";    // Motion enable
-String CL_EN_STATE = "CLOCK ON ";     // Clock enable
-String PIN_EN_STATE = "PINKY ON ";    // Light Pinky  PIN
-String CLY_EN_STATE = "CLYDE ON ";    // Light Clyde  CLY
-String CHE_EN_STATE = "CHERRY ON ";   // Light Cherry CHE
-String PAC_EN_STATE = "PACMAN ON ";   // Light PacMan PAC
-String BLI_EN_STATE = "BLINKY ON ";   // Light Blinky BLI
-String INK_EN_STATE = "INKY ON ";     // Light Inky   INK
-String LS_EN_STATE = "LIGHT SENSOR ON ";    // LIGHT SENSOR enable
+String M_EN_STATE = "MASTER ON ";       // Master enable
+String S_EN_STATE = "SOUND ON ";        // Light enable
+String L_EN_STATE = "LIGHT ON ";        // Sound enable
+String MO_EN_STATE = "MOTION ON ";      // Motion enable
+String CL_EN_STATE = "CLOCK ON ";       // Clock enable
+String PIN_EN_STATE = "PINKY ON ";      // Light Pinky  PIN
+String CLY_EN_STATE = "CLYDE ON ";      // Light Clyde  CLY
+String CHE_EN_STATE = "CHERRY ON ";     // Light Cherry CHE
+String PAC_EN_STATE = "PACMAN ON ";     // Light PacMan PAC
+String BLI_EN_STATE = "BLINKY ON ";     // Light Blinky BLI
+String INK_EN_STATE = "INKY ON ";       // Light Inky   INK
+String LS_EN_STATE = "LIGHT SENSOR ON ";// LIGHT SENSOR enable
 
+void setup() 
+{
+  pinMode(LED_B, OUTPUT);
+  pinMode(LED_R, OUTPUT);
+  pinMode(LED_G, OUTPUT);
+  digitalWrite(LED_G, HIGH);
+  delay(300);
+  digitalWrite(LED_G, LOW);
+  delay(300);
 
-void setup() {
   Serial.begin(9600);
+  for (int i = 0; i<99; i=i+1){MESSAGE_PART_LENGTH[i]=8;}
+
+  MESSAGE_PART_LENGTH[10] = 5; // Lambda, i.e., an unassigned message to send to do nothing but refresh webpage
   MESSAGE_PART_LENGTH[11] = 5; // Master enable
   MESSAGE_PART_LENGTH[12] = 5; // Light enable
   MESSAGE_PART_LENGTH[13] = 5; // Sound enable
@@ -78,23 +87,40 @@ void setup() {
   MESSAGE_PART_LENGTH[23] = 8; // Light Sensor trigger value
   MESSAGE_PART_LENGTH[24] = 6; // Performance number
   
-  // Connect to Wi-Fi network with SSID and password
-  //Debug Serial.print("Connecting to ");
-  //Debug Serial.println(ssid);
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    //Debug Serial.print(".");
+  //Initialize serial and wait for port to open:
+  while (!Serial) {;} // wait for serial port to connect. Needed for native USB port only
+  // check for the presence of the shield:
+  //if (WiFi.status() == WL_NO_SHIELD) 
+  //{
+  //  Serial.println("WiFi shield not present");
+  //  digitalWrite(LED_R, HIGH);
+  //  while (true);  // don't continue:
+  //  }
+
+  digitalWrite(LED_G, LOW);
+  digitalWrite(LED_B, HIGH);
+
+  while (status != WL_CONNECTED)  // attempt to connect to Wifi network:
+  {
+    Serial.print("Attempting to connect to SSID: ");
+    Serial.println(ssid);
+    status = WiFi.begin(ssid, pass);    // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
+    delay(10000);    // wait 10 seconds for connection:
   }
-  // Print local IP address and start web server
-  //Debug Serial.println("");
-  //Debug Serial.println("WiFi connected.");
-  //Debug Serial.println("IP address: ");
-  //Debug Serial.println(WiFi.localIP());
+    
+  digitalWrite(LED_B, LOW);
+  digitalWrite(LED_G, HIGH);
+  delay(1000);
+  digitalWrite(LED_G, LOW);
+
   server.begin();
+  // printWifiStatus();  // you're connected now, so print out the status:
 }
 
-void loop(){
+
+void loop() 
+{
+  
   WiFiClient client = server.available();   // Listen for incoming clients
   if (client) {                             // If a new client connects,
     //Debug Serial.println("New Client.");          // print a message out in the serial port
@@ -102,18 +128,19 @@ void loop(){
     currentTime = millis();
     previousTime = currentTime;
     while (client.connected() && currentTime - previousTime <= timeoutTime) { // loop while the client's connected
-      currentTime = millis();         
+      currentTime = millis();     
       if (client.available())  // if there's bytes to read from the client,
-      {
+      {    
         char c = client.read(); // read a byte
         if(c == 'G')
         {
-          c = client.read();    // read a byte         
+          c = client.read();    // read a byte   
           if(c == 'E')
           {
-            c = client.read();    // read a byte         
+            c = client.read();    // read a byte 
             if(c == 'T') //GET is found
             {
+              digitalWrite(LED_B, HIGH);
               c = client.read();  // read a byte to get past a space
               c = client.read();  // read another byte to get past the '/'
               c = client.read();  // read the first byte of interest, i.e., the first byte of the two digit command category.
@@ -127,20 +154,25 @@ void loop(){
               COMMAND_CAT += c - 48;
               message_length = MESSAGE_PART_LENGTH[COMMAND_CAT];  // this determines the length of the command's value and set limit to # of reads below.
 
-              //header = 'GET'
-              for (int i = 0; i<=message_length-4; i=i+1)
+              if((message_length > 4) && (message_length < max_message_length + 1))
               {
-                char c = client.read();
-                Serial.write(c);
-                MESSAGE_TO_ATMEGA += c;
+                for (int i = 0; i<=message_length-4; i=i+1)
+                {
+                  char c = client.read();
+                  delay(1);
+                  Serial.write(c);
+                  MESSAGE_TO_ATMEGA += c;
+                }
+                //Serial.write('.');
+                Serial.write('\n');
               }
-              Serial.write('.');
-              Serial.write('\n');
+              digitalWrite(LED_B, LOW);
+
             }
           }          
         }
         if (c == '\n') 
-        {                    // if the byte is a newline character
+        { // if the byte is a newline character
           // if the current line is blank, you got two newline characters in a row.
           // that's the end of the client HTTP request, so send a response:
           if (currentLine.length() == 0) 
@@ -240,10 +272,12 @@ void loop(){
           currentLine += c;      // add it to the end of the currentLine
         }
       }
+      Serial.flush();
     }
     //header = "";  // Clear the header variable
     client.stop(); // Close the connection
     //Debug Serial.println("Client disconnected.");
     //Debug Serial.println("");
+
   }
 }

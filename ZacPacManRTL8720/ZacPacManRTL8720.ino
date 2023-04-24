@@ -24,21 +24,22 @@
 
 char ssid[] = "007";    // your network SSID (name)
 char pass[] = "skyfall1";       // your network password
-int keyIndex = 0;               // your network key Index number (needed only for WEP)
+//int keyIndex = 0;               // your network key Index number (needed only for WEP)
 //const char* ssid     = "DaveCave";
 //const char* password = "ladytheresabasketballinmypudding";
 //int keyIndex = 0;               // your network key Index number (needed only for WEP)
 
-int status = WL_IDLE_STATUS;
+byte status = WL_IDLE_STATUS;
 
 WiFiServer server(80);
  
 String MESSAGE_TO_ATMEGA = ""; 
-int message_length;
-int COMMAND_CAT;
+byte message_length;
+byte max_message_length = 8;
+byte COMMAND_CAT;
 bool currentLineIsBlank;
 bool message_processed;
-int MESSAGE_PART_LENGTH[99];
+byte MESSAGE_PART_LENGTH[99];
 
 unsigned long currentTime = millis();  // Current time
 unsigned long previousTime = 0; // Previous time
@@ -70,6 +71,7 @@ void setup()
   Serial.begin(9600);
   for (int i = 0; i<99; i=i+1){MESSAGE_PART_LENGTH[i]=8;}
 
+  MESSAGE_PART_LENGTH[10] = 5; // Lambda, i.e., an unassigned message to send to do nothing but refresh webpage
   MESSAGE_PART_LENGTH[11] = 5; // Master enable
   MESSAGE_PART_LENGTH[12] = 5; // Light enable
   MESSAGE_PART_LENGTH[13] = 5; // Sound enable
@@ -126,57 +128,51 @@ void loop()
     currentTime = millis();
     previousTime = currentTime;
     while (client.connected() && currentTime - previousTime <= timeoutTime) { // loop while the client's connected
-      currentTime = millis();         
+      currentTime = millis();     
       if (client.available())  // if there's bytes to read from the client,
-      {
+      {    
         char c = client.read(); // read a byte
-        delay(1);
         if(c == 'G')
         {
-          c = client.read();    // read a byte      
-          delay(1);   
+          c = client.read();    // read a byte   
           if(c == 'E')
           {
             c = client.read();    // read a byte 
-            delay(1);        
             if(c == 'T') //GET is found
             {
+              digitalWrite(LED_B, HIGH);
               c = client.read();  // read a byte to get past a space
-              delay(1);
               c = client.read();  // read another byte to get past the '/'
-              delay(1);
               c = client.read();  // read the first byte of interest, i.e., the first byte of the two digit command category.
               MESSAGE_TO_ATMEGA += c;
               Serial.write(c);
               COMMAND_CAT = (c - 48)*10;
 
               c = client.read();  // read a byte
-              delay(1);
               MESSAGE_TO_ATMEGA += c;
               Serial.write(c);
               COMMAND_CAT += c - 48;
               message_length = MESSAGE_PART_LENGTH[COMMAND_CAT];  // this determines the length of the command's value and set limit to # of reads below.
-              //Serial.print("message_length = ");
-              //Serial.println(message_length);
 
-              //c = client.read();  // read a byte
-              // delay(1);
-
-              //header = 'GET'
-              for (int i = 0; i<=message_length-4; i=i+1)
+              if((message_length > 4) && (message_length < max_message_length + 1))
               {
-                char c = client.read();
-                delay(1);
-                Serial.write(c);
-                MESSAGE_TO_ATMEGA += c;
+                for (int i = 0; i<=message_length-4; i=i+1)
+                {
+                  char c = client.read();
+                  delay(1);
+                  Serial.write(c);
+                  MESSAGE_TO_ATMEGA += c;
+                }
+                //Serial.write('.');
+                Serial.write('\n');
               }
-              //Serial.write('.');
-              Serial.write('\n');
+              digitalWrite(LED_B, LOW);
+
             }
           }          
         }
         if (c == '\n') 
-        {                    // if the byte is a newline character
+        { // if the byte is a newline character
           // if the current line is blank, you got two newline characters in a row.
           // that's the end of the client HTTP request, so send a response:
           if (currentLine.length() == 0) 
@@ -276,12 +272,12 @@ void loop()
           currentLine += c;      // add it to the end of the currentLine
         }
       }
+      Serial.flush();
     }
     //header = "";  // Clear the header variable
     client.stop(); // Close the connection
     //Debug Serial.println("Client disconnected.");
     //Debug Serial.println("");
-    Serial.flush();
 
   }
 }

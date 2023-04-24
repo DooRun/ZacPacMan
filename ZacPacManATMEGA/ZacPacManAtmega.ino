@@ -282,7 +282,8 @@ void loop()
   
   delay(5);
   //-----PLAY SELECTED PERFORMANCE-----//
-  if((CMD_CAT_VAL == 11) && (CMD_VAL_VAL ==1)){play_PacMan_intro_song(3); PERF_NUM = 0;CMD_CAT_VAL=0;}
+  //if((CMD_CAT_VAL == 11) && (CMD_VAL_VAL ==1)){play_PacMan_intro_song(3); PERF_NUM = 0;CMD_CAT_VAL=0;}
+  if(PERF_NUM == 71){play_PacMan_intro_song(3); PERF_NUM = 0;}
   if(PERF_NUM == 72){play_MsPacMan_intro_song(3); PERF_NUM = 0;}
   //-----end PLAY SELECTED PERFORMANCE
   

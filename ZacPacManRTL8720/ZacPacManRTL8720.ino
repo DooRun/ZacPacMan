@@ -132,25 +132,30 @@ void loop()
       if (client.available())  // if there's bytes to read from the client,
       {    
         char c = client.read(); // read a byte
+        //Debug Serial.write(c);
         if(c == 'G')
         {
-          c = client.read();    // read a byte   
+          c = client.read();    // read a byte 
+          //Debug Serial.write(c);  
           if(c == 'E')
           {
             c = client.read();    // read a byte 
+            //Debug Serial.write(c);
             if(c == 'T') //GET is found
             {
               digitalWrite(LED_B, HIGH);
               c = client.read();  // read a byte to get past a space
+              //Debug Serial.write(c);
               c = client.read();  // read another byte to get past the '/'
+              //Debug Serial.write(c);
               c = client.read();  // read the first byte of interest, i.e., the first byte of the two digit command category.
+              Serial.write(c);  //<======= DO NOT comment this Serial.write statement as part of disabling DEBUG
               MESSAGE_TO_ATMEGA += c;
-              Serial.write(c);
               COMMAND_CAT = (c - 48)*10;
 
               c = client.read();  // read a byte
               MESSAGE_TO_ATMEGA += c;
-              Serial.write(c);
+              Serial.write(c);  //<======= DO NOT comment this Serial.write statement as part of disabling DEBUG
               COMMAND_CAT += c - 48;
               message_length = MESSAGE_PART_LENGTH[COMMAND_CAT];  // this determines the length of the command's value and set limit to # of reads below.
 
@@ -160,21 +165,23 @@ void loop()
                 {
                   char c = client.read();
                   delay(1);
-                  Serial.write(c);
+                  Serial.write(c);  //<======= DO NOT comment this Serial.write statement as part of disabling DEBUG
                   MESSAGE_TO_ATMEGA += c;
                 }
                 //Serial.write('.');
-                Serial.write('\n');
+                //Debug Serial.write('\n');
               }
               digitalWrite(LED_B, LOW);
 
             }
-          }          
+          }  
+        //Debug Serial.write(c);        
         }
         if (c == '\n') 
         { // if the byte is a newline character
           // if the current line is blank, you got two newline characters in a row.
           // that's the end of the client HTTP request, so send a response:
+          
           if (currentLine.length() == 0) 
           {
             // HTTP headers always start with a response code (e.g. HTTP/1.1 200 OK)
@@ -266,6 +273,7 @@ void loop()
           } else { // if you got a newline, then clear currentLine
             currentLine = "";
           }
+          
         } 
         else if (c != '\r') 
         {  // if you got anything else but a carriage return character,
@@ -274,6 +282,7 @@ void loop()
       }
       Serial.flush();
     }
+    client.println();
     //header = "";  // Clear the header variable
     client.stop(); // Close the connection
     //Debug Serial.println("Client disconnected.");

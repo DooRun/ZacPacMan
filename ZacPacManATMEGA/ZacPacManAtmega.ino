@@ -107,18 +107,24 @@ int tempo = 30;// change this to make the song slower or faster
 int melody[] = {  NOTE_B4, 16, NOTE_B5, 16, NOTE_FS5, 16, NOTE_DS5, 16, NOTE_B5,  32, NOTE_FS5, -16, NOTE_DS5, 8, 
                   NOTE_C5, 16, NOTE_C6, 16, NOTE_G5,  16, NOTE_E5,  16, NOTE_C6,  32, NOTE_G5,  -16, NOTE_E5,  8,
                   NOTE_B4, 16, NOTE_B5, 16, NOTE_FS5, 16, NOTE_DS5, 16, NOTE_B5,  32, NOTE_FS5, -16, NOTE_DS5, 8,  
-                  NOTE_DS5,32, NOTE_E5, 32, NOTE_F5,  32, NOTE_F5,  32, NOTE_FS5, 32, NOTE_G5,   32, NOTE_G5, 32, NOTE_GS5, 32, NOTE_A5, 16, NOTE_B5,8};
+                  NOTE_DS5,32, NOTE_E5, 32, NOTE_F5,  32, NOTE_F5,  32, NOTE_FS5, 32, NOTE_G5,   32, NOTE_G5, 32, NOTE_GS5, 32, NOTE_A5, 16, NOTE_B5,8}; // mr pacman
 
 int melody2[] = { NOTE_G4, 32, NOTE_A4, 32, NOTE_B4, 32, NOTE_C5,  8, NOTE_E5,  8, NOTE_D5,  8, NOTE_F5, 8, 
                   NOTE_E5, 16, NOTE_F5, 16, NOTE_G5, 16, NOTE_E5, 16, NOTE_D5,  8, NOTE_F5,  8,
                   NOTE_E5, 16, NOTE_F5, 16, NOTE_G5, 16, NOTE_E5, 16, NOTE_F5, 16, NOTE_G5, 16, NOTE_A5, 16, NOTE_B5, 16,
-                  NOTE_C6,  8, NOTE_B5,  8, NOTE_C6,  8};
+                  NOTE_C6,  8, NOTE_B5,  8, NOTE_C6,  8}; // ms pacman
+
+int melody3[] = { NOTE_DS4,16, NOTE_F4, 16, REST,    16, NOTE_GS4, 16, REST,    8, NOTE_DS4, 8, REST,     8, NOTE_C4,  8, NOTE_AS3, 16, NOTE_C4, 16, NOTE_DS4, 8,
+                  NOTE_AS3,16, NOTE_C4, 16, REST,    16, NOTE_DS4, 16, REST,   16, NOTE_A3, 16, NOTE_AS3, 8, NOTE_C4,  8, NOTE_DS4,  8, NOTE_F4,  8, NOTE_GS4, 8};// staying alive
+                  
 // sizeof gives the number of bytes, each int value is composed of two bytes (16 bits)
 // there are two values per note (pitch and duration), so for each note there are four bytes
 int notes = sizeof(melody) / sizeof(melody[0]) / 2;
 int notes2 = sizeof(melody2) / sizeof(melody2[0]) / 2;
+int notes3 = sizeof(melody3) / sizeof(melody3[0]) / 2;
 byte notelights[62] = {0,0, 4,4, 2,2, 0,0 , 4,4, 2,2, 0,0, 1,1, 5,5, 3,3, 1,1, 5,5, 3,3, 1,1, 0,0, 4,4 ,2,2, 0,0, 4,4, 2,2, 0,0, 0,0, 1,1, 1,1, 2,2, 2,2, 3,3, 3,3, 4,4, 4,4, 5,5};
-byte notelights2[54] = {0,0, 1,1, 2,2, 0,0, 2,2, 1,1, 3,3, 2,2, 3,3, 4,4, 3,3, 2,2, 4,4, 0,0, 1,1, 2,2, 1,1, 2,2, 3,3, 4,4, 5,5, 7,7, 6,6, 7,7};
+byte notelights2[48] = {0,0, 1,1, 2,2, 0,0, 2,2, 1,1, 3,3, 2,2, 3,3, 4,4, 3,3, 2,2, 4,4, 0,0, 1,1, 2,2, 1,1, 2,2, 3,3, 4,4, 5,5, 7,7, 6,6, 7,7};
+byte notelights3[44] = {3,3, 4,4, 6,6, 5,5, 6,6, 3,3, 6,6, 2,2, 1,1, 2,2, 3,3, 1,1, 2,2, 6,6, 3,3, 6,6, 0,0, 1,1, 2,2, 3,3, 4,4, 5,5};
 // this calculates the duration of a whole note in ms
 int wholenote = (60000 * 4) / tempo;
 int divider = 0, noteDuration = 0;
@@ -138,7 +144,7 @@ unsigned long MOTION_OFF_TIME;
 const int PHOTO_RESISTOR = A5; // photoresistor for shop brightness (input)
 int ROOM_LIGHT;  // value of current room light
 bool ROOM_DARK;
-int DARK_TRIGGER = 500;  // Value below which room is considered dark (ROOM_DARK IS THEN SET TO 1)
+int DARK_TRIGGER = 100;  // Value below which room is considered dark (ROOM_DARK IS THEN SET TO 1)
 //----- end LIGHT SENSOR RELATED
 
 const int NUMBER_OF_FLICKER_PINS = 6;
@@ -200,7 +206,8 @@ void setup() {
   pinMode(PHOTO_RESISTOR, INPUT);
   pinMode(MOTION_PIN, INPUT);
   flicker_controller.setup_controller();
-  //debugStartup_Sequence();
+  play_Staying_Alive_song(4);
+  //Startup_Sequence();
   MESSAGE_PART_LENGTH[11] = 5;  // Master enable
   MESSAGE_PART_LENGTH[12] = 5;  // Light enable
   MESSAGE_PART_LENGTH[13] = 5;  // Sound enable
@@ -261,11 +268,11 @@ void loop()
     Serial.println("cmd_val_val = ");
     Serial.println(CMD_VAL_VAL);
   
-    if(CMD_CAT_VAL == 11){if(CMD_VAL_VAL == 1){M_EN = 1;}else{M_EN = 0;}}  // Master enable
+    //if(CMD_CAT_VAL == 11){if(CMD_VAL_VAL == 1){M_EN = 1;}else{M_EN = 0;}}  // Master enable
     if(CMD_CAT_VAL == 12){if(CMD_VAL_VAL == 1){L_EN = 1;}else{L_EN = 0;}}  // Light enable
-    if(CMD_CAT_VAL == 13){if(CMD_VAL_VAL == 1){S_EN = 1;}else{S_EN = 0;}}  // Sound enable
-    if(CMD_CAT_VAL == 14){if(CMD_VAL_VAL == 1){MO_EN = 1;}else{MO_EN = 0;}}  // Motion enable
-    if(CMD_CAT_VAL == 15){if(CMD_VAL_VAL == 1){CL_EN = 1;}else{CL_EN = 0;}}  // Clock enable
+    if(CMD_CAT_VAL == 13){if(CMD_VAL_VAL == 1){S_EN = 1; play_MsPacMan_intro_song(3);}else{S_EN = 1;play_PacMan_intro_song(3);}}  // Sound enable<---Change sound enable else S_EN=0 eventually
+    if(CMD_CAT_VAL == 14){if(CMD_VAL_VAL == 1){MO_EN = 1; flicker_controller.do_flicker(true);}else{MO_EN = 0; flicker_controller.do_flicker(false);}}  // Motion enable
+    if(CMD_CAT_VAL == 15){if(CMD_VAL_VAL == 1){CL_EN = 1;}else{CL_EN = 0; Startup_Sequence();}}  // Clock enable
     if(CMD_CAT_VAL == 16){if(CMD_VAL_VAL == 1){PIN_EN = 1;}else{PIN_EN = 0;}}  // Light Pinky  PIN flickerPin0
     if(CMD_CAT_VAL == 17){if(CMD_VAL_VAL == 1){CLY_EN = 1;}else{CLY_EN = 0;}}  // Light Clyde  CLY flickerPin1
     if(CMD_CAT_VAL == 18){if(CMD_VAL_VAL == 1){CHE_EN = 1;}else{CHE_EN = 0;}}  // Light Cherry CHE flickerPin2
@@ -298,15 +305,16 @@ void loop()
   //..........check for motion at all sensors................................................................
   /*
   MOTION_DETECTED = digitalRead(MOTION_PIN);
-  if(MOTION_DETECTED == 1){
+  if(MOTION_DETECTED == 1)
+  {
     MOTION_DETECTED_HOLD = 1;
     MOTION_OFF_TIME = millis() + MOTION_LIGHT_DURATION;
   }
-  if(MOTION_OFF_TIME < millis()){MO_EN = O;}else{MO_EN = 1}
+  if(MOTION_OFF_TIME > millis()){MOTION_DETECTED_HOLD == 0;}else{MOTION_DETECTED_HOLD = 0; }
+  
+  //if(ROOM_DARK == 0){analogWrite(PINS_FOR_FLICKER[3],255);}else{analogWrite(PINS_FOR_FLICKER[3],0);}
+  if(MOTION_DETECTED_HOLD == 1){L_EN=1;}else{L_EN = 1;}
   */
-  if(ROOM_DARK == 0){analogWrite(PINS_FOR_FLICKER[3],255);}else{analogWrite(PINS_FOR_FLICKER[3],0);}
-  if(MOTION_DETECTED == 1){analogWrite(PINS_FOR_FLICKER[5],255);}
-
 
   digitalWrite(PINS_FOR_FLICKER[0], 1 * M_EN * L_EN * PIN_EN);
   digitalWrite(PINS_FOR_FLICKER[1], 1 * M_EN * L_EN * CLY_EN);
@@ -352,7 +360,6 @@ void fade_out_one_LED(){
 }
 
 void play_PacMan_intro_song(byte added_divider) {
-    //---PLAY PACMAN INTRO SONG---//
   // Remember, the array is twice the number of notes (notes + durations)
   for (int thisNote = 0; thisNote < notes * 2; thisNote = thisNote + 2) 
   {
@@ -381,7 +388,6 @@ void play_PacMan_intro_song(byte added_divider) {
 }
 
 void play_MsPacMan_intro_song(byte added_divider) {
-  //---PLAY MsPACMAN INTRO SONG---//
   // Remember, the array is twice the number of notes (notes + durations)
   for (int thisNote = 0; thisNote < notes2 * 2; thisNote = thisNote + 2) 
   {
@@ -414,6 +420,125 @@ void play_MsPacMan_intro_song(byte added_divider) {
     noTone(13);
     for(int i=0; i<6; i+=1){digitalWrite(PINS_FOR_FLICKER[i],LOW);}
   //---end PLAY MsPACMAN INTRO SONG
+  }
+}
+
+
+void play_Staying_Alive_song(byte added_divider) {
+byte set = 44; 
+Most_staying_alive_notes(added_divider, set);
+set = 42;
+Most_staying_alive_notes(added_divider, set);
+//two long notes
+digitalWrite(PINS_FOR_FLICKER[0], LOW);
+digitalWrite(PINS_FOR_FLICKER[1], LOW);
+digitalWrite(PINS_FOR_FLICKER[2], LOW);
+digitalWrite(PINS_FOR_FLICKER[3], LOW);
+digitalWrite(PINS_FOR_FLICKER[4], LOW);
+digitalWrite(PINS_FOR_FLICKER[5], LOW);
+byte BRIGHT[6];
+for (int i = 2*NOTE_GS4; i<2*NOTE_AS4; i+=2)  //415 to 466, 830 932
+{
+  //BRIGHT[5] = 100 + 154 * (i-830)/102;
+  tone(13, i/2, 8); delay(5);
+  //analogWrite(PINS_FOR_FLICKER[0], BRIGHT[5]);
+  //analogWrite(PINS_FOR_FLICKER[1], BRIGHT[5]);
+  //analogWrite(PINS_FOR_FLICKER[2], BRIGHT[5]);
+  //analogWrite(PINS_FOR_FLICKER[3], BRIGHT[5]);
+  //analogWrite(PINS_FOR_FLICKER[4], BRIGHT[5]);
+  //analogWrite(PINS_FOR_FLICKER[5], BRIGHT[5]);
+  long temp = (i-54) % 25;
+  if(temp == 0)
+  {
+    if(BRIGHT[0]==255)
+    {
+      BRIGHT[0]=255;
+      BRIGHT[5]=255;
+    }
+    else
+    {
+      BRIGHT[0]=0;
+      BRIGHT[5]=0;
+    }
+  }
+}
+tone(13,NOTE_AS4,5000);
+
+short int trigger = 500;
+short int main_counter;    // for change in tempo of strobe
+short int counter_shutoff; // for strobe effect (shutoff)
+bool shutoff = 1;
+for (int i = 0; i<3000; i=i+10)
+{
+  delay(10);
+  BRIGHT[1]=pow((2000-(pow(pow(2000-i,2),.5))),0.8)*255/pow(2000,0.8);
+  BRIGHT[2]=pow((2000-(pow(pow(2000-i,2),.5))),2.2)*255/pow(2000,2.2);
+  BRIGHT[3]=pow((2000-(pow(pow(2000-i,2),.5))),3.4)*255/pow(2000,3.4);
+  BRIGHT[4]=pow((2000-(pow(pow(2000-i,2),.5))),4.6)*255/pow(2000,4.6);
+
+  main_counter += 10;
+  counter_shutoff +=10;  
+  if((trigger == 500) && (i >= 1500)){trigger = 250; main_counter = 0;}
+  if(counter_shutoff > 50){shutoff = 0;}
+  if(counter_shutoff > trigger){counter_shutoff = 0; shutoff = 1;}
+  if((trigger == 125) && ((counter_shutoff - 5) % 125 == 0)){counter_shutoff = 0; shutoff = 1;}
+  /*if(main_counter >= trigger)
+  {
+    if(BRIGHT[0]==255)
+    {
+      BRIGHT[0]=255;
+      BRIGHT[5]=255;
+    }
+    else
+    {
+      BRIGHT[0]=0;
+      BRIGHT[5]=0;
+    }
+    main_counter = 0;
+  }*/
+  digitalWrite(PINS_FOR_FLICKER[0], shutoff);
+  analogWrite(PINS_FOR_FLICKER[1], BRIGHT[1]);
+  analogWrite(PINS_FOR_FLICKER[2], BRIGHT[2]);
+  analogWrite(PINS_FOR_FLICKER[3], BRIGHT[3]);
+  analogWrite(PINS_FOR_FLICKER[4], BRIGHT[4]);
+  digitalWrite(PINS_FOR_FLICKER[5], shutoff);
+
+}
+digitalWrite(PINS_FOR_FLICKER[0], LOW);
+digitalWrite(PINS_FOR_FLICKER[1], LOW);
+digitalWrite(PINS_FOR_FLICKER[2], LOW);
+digitalWrite(PINS_FOR_FLICKER[3], LOW);
+digitalWrite(PINS_FOR_FLICKER[4], LOW);
+digitalWrite(PINS_FOR_FLICKER[5], LOW);
+set = 44; 
+Most_staying_alive_notes(added_divider, set);
+}
+void Most_staying_alive_notes(byte added_divider, byte set) {
+  // Remember, the array is twice the number of notes (notes + durations)
+  for (int thisNote = 0; thisNote < set; thisNote = thisNote + 2) 
+  {
+    // calculates the duration of each note
+    divider = melody3[thisNote + 1];
+    if (divider > 0) {
+      // regular note, just proceed
+      noteDuration = (wholenote) / divider / added_divider;
+    } else if (divider < 0) {
+      // dotted notes are represented with negative durations!!
+      noteDuration = (wholenote) / abs(divider) / added_divider;
+      noteDuration *= 1.5; // increases the duration in half for dotted notes
+    }
+    // we only play the note for 90% of the duration, leaving 10% as a pause
+    tone(13, melody3[thisNote], noteDuration*.9);
+    digitalWrite(PINS_FOR_FLICKER[notelights3[thisNote]],HIGH);
+    // Wait for the specified duration before playing the next note.
+    delay(noteDuration/2);
+    if((thisNote > 42) && thisNote < 2 * notes - 2){digitalWrite(PINS_FOR_FLICKER[notelights3[thisNote]],LOW);}
+    // stop the waveform generation before the next note.
+    delay(noteDuration/2);
+    noTone(13);
+    digitalWrite(PINS_FOR_FLICKER[notelights3[thisNote]],LOW);
+    
+  //---end PLAY PACMAN INTRO SONG
   }
 }
 

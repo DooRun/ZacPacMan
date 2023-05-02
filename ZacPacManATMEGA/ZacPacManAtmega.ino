@@ -181,8 +181,8 @@ byte TOGGLE;
   //  Arduino pin 1 to voltage divider then to ESP8266 RX
   //  Connect GND from the Arduiono to GND on the ESP8266
   //  Pull ESP8266 CH_PD HIGH
-SoftwareSerial mySerial(0,1);  // RX,TX  (7,8 FOR arduino board but NOT FOR ATMEGA CHIP!!! WHICH IS 0,1)
-long SERIAL_TIMEOUT = 150; // This is needed for serial read otherwise, may not read all the data.
+SoftwareSerial mySerial(7,8);  // RX,TX  (7,8 FOR arduino board but NOT FOR ATMEGA CHIP!!! WHICH IS 0,1)
+long SERIAL_TIMEOUT = 350; // This is needed for serial read otherwise, may not read all the data.
 bool ESP_SPOKE;
 String MESSAGE_INCOMING = ""; 
 int message_length;
@@ -192,6 +192,15 @@ String CMD_VAL_STRING;  // <== command_value_string
 int CMD_VAL_VAL;        // <== command_value_value
 
 int MESSAGE_PART_LENGTH[99];
+
+//----- Message and other variables -----//
+short data_count;                    // counter for number of characters stored or printed.
+//long SERIAL_TIMEOUT = 150;         // This is needed for serial read otherwise, may not read all the data.
+unsigned char c;                   // char read by client from server http reply
+unsigned char data_line [601];     // this will be an array holding the invidiually read data points in ASCII value.
+long ZPMZ_end;  // This is the first position in the data_line array after ZPMZ has been found.
+
+
 
 //----- end COMMUNICATIONS RELATED
 
@@ -206,7 +215,7 @@ void setup() {
   pinMode(PHOTO_RESISTOR, INPUT);
   pinMode(MOTION_PIN, INPUT);
   flicker_controller.setup_controller();
-  play_Staying_Alive_song(4);
+  //play_Staying_Alive_song(4);
   //Startup_Sequence();
   MESSAGE_PART_LENGTH[11] = 5;  // Master enable
   MESSAGE_PART_LENGTH[12] = 5;  // Light enable
@@ -233,25 +242,108 @@ void setup() {
 
 void loop() 
 {
+  //----- READ/STORE WANTED DATA FROM RTL8720DN_BW PLACED IN SERIAL BUFFER IF IT EXISTS -----//
+  long lastTimeSerialAvailable = millis();
+  ZPMZ_end = 0;
+  data_count = 0;
+  while (millis() - lastTimeSerialAvailable < SERIAL_TIMEOUT)
+  { 
+    while (mySerial.available())
+    {
+        //digitalWrite(LED_orange_pin, HIGH);
+        data_count += 1;
+        lastTimeSerialAvailable = millis();
+        data_line [data_count] = mySerial.read();
+    }
+  }
+  //----- end READ/STORE WANTED DATA FROM RTL8720DN_BW PLACED IN SERIAL BUFFER IF IT EXISTS
+  if(data_count >0)
+  {
+    Serial.println("#####");
+    Serial.println(data_count);
+    for (int i=1; i< data_count + 1; i++)
+    {
+      Serial.write(data_line[i]);
+      delay(1);
+      //if(data_line[i]==90){if(data_line[i+1]==80){if(data_line[i+2]==77){if(data_line[i+3]==90){ZPMZ_end = i+4;}}}}
+    }
+    //data_count = 0;
+    delay(4);
+    if (ZPMZ_end != 0){digitalWrite(13,HIGH);Serial.println(ZPMZ_end);}else{digitalWrite(13,LOW);}
+
+    Serial.println("");
+
+    CMD_CAT_VAL = (data_line[ZPMZ_end] - 48)*10 + data_line[ZPMZ_end+1] - 48;
+    Serial.print("CMD_CAT_VAL = ");
+    Serial.println(CMD_CAT_VAL);
+
+    CMD_VAL_VAL = (data_line[ZPMZ_end+3] - 48);
+    Serial.print("CMD_VAL_VAL = ");
+    Serial.println(CMD_VAL_VAL);
+
+    Serial.println("ZZZZ");
+    mySerial.flush();
+  }
+}
+/*
+
+  //----- INTERPRET/PRINT THE DATA OVER THE SERIAL PORT IF NEW DATA EXISTS -----// 
+  if(data_count > 0)  // if a new set of data has been read, by this point it has been stored and is ready to be processed.
+  {
+    delay(1);
+
   //---OBTAIN MESSAGE FROM ESP8266---//
   MESSAGE_INCOMING = "";
-  while (mySerial.available())  // read any serial buffer data.
+  char c;
+  if (mySerial.available())  // read and process buffer data.
   {
-    delay(7);  // 5 seems to work.  I put it at 7.  If garbage is communicated, increase this value.  10 is shown online for a good value.
+    c=mySerial.read();
+    Serial.write(c);
+    CMD_CAT_VAL = c - 48 * 10;
+
+    c=mySerial.read();
+    Serial.write(c);
+    CMD_CAT_VAL += c - 48;
+
+    Serial.println();
+    Serial.println("cmd_cat_val = ");
+    Serial.println(CMD_CAT_VAL);
+
+    c=mySerial.read();
+    Serial.write(c);
+    CMD_VAL_VAL += c - 48;
+   
+    Serial.println();
+    Serial.println("cmd_val_val = ");
+    Serial.println(CMD_VAL_VAL);
+
+    mySerial.flush();
+
+  }
+}
+  /*
+  {
+    //Serial.println("================");
+    delay(2);  // 5 seems to work.  I put it at 7.  If garbage is communicated, increase this value.  10 is shown online for a good value.
     ESP_SPOKE = true;
     while (mySerial.available() > 0)
     {
-      char c = mySerial.read();  // read a byte
-      MESSAGE_INCOMING += c;
+      c = mySerial.read();  // read a byte
+      MESSAGE_INCOMING.concat(c);
+      delay(1);
+      Serial.write(c);
     }
   }
-  mySerial.flush();
+  //mySerial.flush();
   //---end OBTAIN MESSAGE FROM ESP8266
 
   //---UPDATE VARIABLES IF MESSAGE WAS RECEIVED---//
   if(ESP_SPOKE == true)  
   {
-      
+    //Serial.println();
+    //Serial.println("Message incoming =...");
+    //Serial.println(MESSAGE_INCOMING);
+    //Serial.println("...end");  
     CMD_CAT_STRING = "";  // reset
     CMD_CAT_STRING = MESSAGE_INCOMING.substring(0,2);
     CMD_CAT_VAL = CMD_CAT_STRING.toInt();
@@ -287,7 +379,7 @@ void loop()
   }
   //---end UPDATE VARIABLES IF MESSAGE WAS RECEIVED  }
   
-  delay(5);
+  delay(1);
   //-----PLAY SELECTED PERFORMANCE-----//
   //if((CMD_CAT_VAL == 11) && (CMD_VAL_VAL ==1)){play_PacMan_intro_song(3); PERF_NUM = 0;CMD_CAT_VAL=0;}
   if(PERF_NUM == 71){play_PacMan_intro_song(3); PERF_NUM = 0;}
@@ -314,7 +406,7 @@ void loop()
   
   //if(ROOM_DARK == 0){analogWrite(PINS_FOR_FLICKER[3],255);}else{analogWrite(PINS_FOR_FLICKER[3],0);}
   if(MOTION_DETECTED_HOLD == 1){L_EN=1;}else{L_EN = 1;}
-  */
+  
 
   digitalWrite(PINS_FOR_FLICKER[0], 1 * M_EN * L_EN * PIN_EN);
   digitalWrite(PINS_FOR_FLICKER[1], 1 * M_EN * L_EN * CLY_EN);
@@ -495,7 +587,7 @@ for (int i = 0; i<3000; i=i+10)
       BRIGHT[5]=0;
     }
     main_counter = 0;
-  }*/
+  }
   digitalWrite(PINS_FOR_FLICKER[0], shutoff);
   analogWrite(PINS_FOR_FLICKER[1], BRIGHT[1]);
   analogWrite(PINS_FOR_FLICKER[2], BRIGHT[2]);
@@ -591,4 +683,4 @@ void Startup_Sequence()
   digitalWrite(PINS_FOR_FLICKER[3],1);
   digitalWrite(PINS_FOR_FLICKER[4],1);
   digitalWrite(PINS_FOR_FLICKER[5],1);
-}
+}*/

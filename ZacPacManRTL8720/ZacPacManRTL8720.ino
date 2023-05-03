@@ -144,9 +144,14 @@ void loop()
               c = client.read();    // read a byte 
               //Debug Serial.write(c);
               if(c == 90)   // Z was found for a total of ZPMZ
-              digitalWrite(LED_B, LOW); // light indicator connection was made.
-              digitalWrite(LED_G, HIGH); // light indicator Tthat ZPMZ was found.
               {
+                Serial.write(90);  // Z <======= Need to write ZPMZ since it was found and removed from serial buffer...
+                Serial.write(80);  // P
+                Serial.write(77);  // M
+                Serial.write(90);  // Z
+                delay(1);
+                digitalWrite(LED_B, LOW); // light indicator connection was made.
+                digitalWrite(LED_G, HIGH); // light indicator Tthat ZPMZ was found.
                 data_count = 0;
                 while (client.available())  // while there are bytes to read from the client,
                 {

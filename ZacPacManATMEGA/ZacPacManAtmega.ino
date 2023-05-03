@@ -198,7 +198,8 @@ short data_count;                    // counter for number of characters stored 
 //long SERIAL_TIMEOUT = 150;         // This is needed for serial read otherwise, may not read all the data.
 unsigned char c;                   // char read by client from server http reply
 unsigned char data_line [601];     // this will be an array holding the invidiually read data points in ASCII value.
-long ZPMZ_end;  // This is the first position in the data_line array after ZPMZ has been found.
+int ZPMZ_end;  // This is the first position in the data_line array after ZPMZ has been found.
+bool break_out = 0;  // used to exit several nested loops once all important part of message is received externally from serial buffer.
 
 
 
@@ -245,46 +246,110 @@ void loop()
   //----- READ/STORE WANTED DATA FROM RTL8720DN_BW PLACED IN SERIAL BUFFER IF IT EXISTS -----//
   long lastTimeSerialAvailable = millis();
   ZPMZ_end = 0;
-  data_count = 0;
+  lastTimeSerialAvailable = millis();
   while (millis() - lastTimeSerialAvailable < SERIAL_TIMEOUT)
   { 
+    data_count = 0;
+    lastTimeSerialAvailable = millis(); 
     while (mySerial.available())
+   
     {
-        //digitalWrite(LED_orange_pin, HIGH);
-        data_count += 1;
-        lastTimeSerialAvailable = millis();
-        data_line [data_count] = mySerial.read();
+      //delay(1);
+      data_count +=1;
+      char c = mySerial.read(); // read a byte
+      data_line[data_count]=c;
+      delay(1);
+      Serial.write(c);   //<---Z?
+      //delay(1);
+      if(c == 90)   // Z was found
+      {
+        //Serial.print("1found");
+        data_count +=1;
+        c = mySerial.read();    // read a byte 
+        data_line[data_count]=c;
+        delay(1);
+        Serial.write(c);  //<---P?
+        //delay(1); 
+        if(c == 80)    // P was found
+        {
+          data_count +=1;
+          c = mySerial.read();    // read a byte 
+          data_line[data_count]=c;
+          delay(1);
+          Serial.write(c); //<---M?
+          //delay(2);
+          if(c == 77)   // M was found
+          {
+            data_count +=1;
+            c = mySerial.read();    // read a byte 
+            data_line[data_count]=c;
+            delay(1);
+            Serial.write(c); //<---Z?
+            //delay(1);
+            if(c == 90)   // Z was found for a total of ZPMZ
+            {
+              Serial.println("");
+              //Serial.println("ZPMZ WAS found");
+              ZPMZ_end = data_count;
+              Serial.write(90);  // Z <======= Need to write ZPMZ since it was found and removed from serial buffer...
+              //delay(2);
+              Serial.write(80);  // P
+              //delay(2);
+              Serial.write(77);  // M
+              //delay(2);
+              Serial.write(90);  // Z
+              //delay(2);
+              while (mySerial.available())  // while there are bytes to read from the client,
+              {
+                data_count +=1;
+                c = mySerial.read(); // read a byte
+                data_line[data_count]=c;
+                Serial.write(c);  //<======= DO NOT comment this Serial.write statement as part of disabling DEBUG
+                //data_line [data_count] = c;
+                if(c==120){break_out=1;}  // 120 is the ASCII value for lower case x.
+                if(break_out==1){break;}
+                delay(2);
+              }
+            }
+          }
+        }
+        if(break_out==1){break;}
+      }  
+      if(break_out==1){break;}
     }
+    if(break_out==1){break;}
   }
+  break_out = 0;
   //----- end READ/STORE WANTED DATA FROM RTL8720DN_BW PLACED IN SERIAL BUFFER IF IT EXISTS
   if(data_count >0)
   {
-    Serial.println("#####");
+    Serial.println("");
     Serial.println(data_count);
-    for (int i=1; i< data_count + 1; i++)
-    {
-      Serial.write(data_line[i]);
-      delay(1);
-      //if(data_line[i]==90){if(data_line[i+1]==80){if(data_line[i+2]==77){if(data_line[i+3]==90){ZPMZ_end = i+4;}}}}
-    }
-    //data_count = 0;
-    delay(4);
-    if (ZPMZ_end != 0){digitalWrite(13,HIGH);Serial.println(ZPMZ_end);}else{digitalWrite(13,LOW);}
 
     Serial.println("");
+    Serial.print("ZPMZ_end =");
+    Serial.println(ZPMZ_end);
 
-    CMD_CAT_VAL = (data_line[ZPMZ_end] - 48)*10 + data_line[ZPMZ_end+1] - 48;
+    Serial.println("");
+    Serial.print("data line of ZPMZ =");
+    Serial.println(data_line[ZPMZ_end+1]);
+
+    CMD_CAT_VAL = (data_line[ZPMZ_end+1]-48)*10 + data_line[ZPMZ_end+2]-48;
     Serial.print("CMD_CAT_VAL = ");
     Serial.println(CMD_CAT_VAL);
 
-    CMD_VAL_VAL = (data_line[ZPMZ_end+3] - 48);
+    CMD_VAL_VAL = data_line[ZPMZ_end+4]-48;
     Serial.print("CMD_VAL_VAL = ");
     Serial.println(CMD_VAL_VAL);
 
-    Serial.println("ZZZZ");
+    Serial.println("");
+    Serial.println("");
     mySerial.flush();
-  }
-}
+    data_count=0;
+  
+    
+  
+
 /*
 
   //----- INTERPRET/PRINT THE DATA OVER THE SERIAL PORT IF NEW DATA EXISTS -----// 
@@ -359,8 +424,8 @@ void loop()
     Serial.println();
     Serial.println("cmd_val_val = ");
     Serial.println(CMD_VAL_VAL);
-  
-    //if(CMD_CAT_VAL == 11){if(CMD_VAL_VAL == 1){M_EN = 1;}else{M_EN = 0;}}  // Master enable
+  */
+    if(CMD_CAT_VAL == 11){if(CMD_VAL_VAL == 1){M_EN = 1;}else{M_EN = 0;}}  // Master enable
     if(CMD_CAT_VAL == 12){if(CMD_VAL_VAL == 1){L_EN = 1;}else{L_EN = 0;}}  // Light enable
     if(CMD_CAT_VAL == 13){if(CMD_VAL_VAL == 1){S_EN = 1; play_MsPacMan_intro_song(3);}else{S_EN = 1;play_PacMan_intro_song(3);}}  // Sound enable<---Change sound enable else S_EN=0 eventually
     if(CMD_CAT_VAL == 14){if(CMD_VAL_VAL == 1){MO_EN = 1; flicker_controller.do_flicker(true);}else{MO_EN = 0; flicker_controller.do_flicker(false);}}  // Motion enable
@@ -406,7 +471,7 @@ void loop()
   
   //if(ROOM_DARK == 0){analogWrite(PINS_FOR_FLICKER[3],255);}else{analogWrite(PINS_FOR_FLICKER[3],0);}
   if(MOTION_DETECTED_HOLD == 1){L_EN=1;}else{L_EN = 1;}
-  
+  */
 
   digitalWrite(PINS_FOR_FLICKER[0], 1 * M_EN * L_EN * PIN_EN);
   digitalWrite(PINS_FOR_FLICKER[1], 1 * M_EN * L_EN * CLY_EN);
@@ -516,94 +581,95 @@ void play_MsPacMan_intro_song(byte added_divider) {
 }
 
 
-void play_Staying_Alive_song(byte added_divider) {
-byte set = 44; 
-Most_staying_alive_notes(added_divider, set);
-set = 42;
-Most_staying_alive_notes(added_divider, set);
-//two long notes
-digitalWrite(PINS_FOR_FLICKER[0], LOW);
-digitalWrite(PINS_FOR_FLICKER[1], LOW);
-digitalWrite(PINS_FOR_FLICKER[2], LOW);
-digitalWrite(PINS_FOR_FLICKER[3], LOW);
-digitalWrite(PINS_FOR_FLICKER[4], LOW);
-digitalWrite(PINS_FOR_FLICKER[5], LOW);
-byte BRIGHT[6];
-for (int i = 2*NOTE_GS4; i<2*NOTE_AS4; i+=2)  //415 to 466, 830 932
+void play_Staying_Alive_song(byte added_divider) 
 {
-  //BRIGHT[5] = 100 + 154 * (i-830)/102;
-  tone(13, i/2, 8); delay(5);
-  //analogWrite(PINS_FOR_FLICKER[0], BRIGHT[5]);
-  //analogWrite(PINS_FOR_FLICKER[1], BRIGHT[5]);
-  //analogWrite(PINS_FOR_FLICKER[2], BRIGHT[5]);
-  //analogWrite(PINS_FOR_FLICKER[3], BRIGHT[5]);
-  //analogWrite(PINS_FOR_FLICKER[4], BRIGHT[5]);
-  //analogWrite(PINS_FOR_FLICKER[5], BRIGHT[5]);
-  long temp = (i-54) % 25;
-  if(temp == 0)
+  byte set = 44; 
+  Most_staying_alive_notes(added_divider, set);
+  set = 42;
+  Most_staying_alive_notes(added_divider, set);
+  //two long notes
+  digitalWrite(PINS_FOR_FLICKER[0], LOW);
+  digitalWrite(PINS_FOR_FLICKER[1], LOW);
+  digitalWrite(PINS_FOR_FLICKER[2], LOW);
+  digitalWrite(PINS_FOR_FLICKER[3], LOW);
+  digitalWrite(PINS_FOR_FLICKER[4], LOW);
+  digitalWrite(PINS_FOR_FLICKER[5], LOW);
+  byte BRIGHT[6];
+  for (int i = 2*NOTE_GS4; i<2*NOTE_AS4; i+=2)  //415 to 466, 830 932
   {
-    if(BRIGHT[0]==255)
+    //BRIGHT[5] = 100 + 154 * (i-830)/102;
+    tone(13, i/2, 8); delay(5);
+    //analogWrite(PINS_FOR_FLICKER[0], BRIGHT[5]);
+    //analogWrite(PINS_FOR_FLICKER[1], BRIGHT[5]);
+    //analogWrite(PINS_FOR_FLICKER[2], BRIGHT[5]);
+    //analogWrite(PINS_FOR_FLICKER[3], BRIGHT[5]);
+    //analogWrite(PINS_FOR_FLICKER[4], BRIGHT[5]);
+    //analogWrite(PINS_FOR_FLICKER[5], BRIGHT[5]);
+    long temp = (i-54) % 25;/*
+    if(temp == 0)
     {
-      BRIGHT[0]=255;
-      BRIGHT[5]=255;
-    }
-    else
-    {
-      BRIGHT[0]=0;
-      BRIGHT[5]=0;
-    }
+      if(BRIGHT[0]==255)
+      {
+        BRIGHT[0]=255;
+        BRIGHT[5]=255;
+      }
+      else
+      {
+        BRIGHT[0]=0;
+        BRIGHT[5]=0;
+      }
+    }*/
   }
-}
-tone(13,NOTE_AS4,5000);
+  tone(13,NOTE_AS4,5000);
 
-short int trigger = 500;
-short int main_counter;    // for change in tempo of strobe
-short int counter_shutoff; // for strobe effect (shutoff)
-bool shutoff = 1;
-for (int i = 0; i<3000; i=i+10)
-{
-  delay(10);
-  BRIGHT[1]=pow((2000-(pow(pow(2000-i,2),.5))),0.8)*255/pow(2000,0.8);
-  BRIGHT[2]=pow((2000-(pow(pow(2000-i,2),.5))),2.2)*255/pow(2000,2.2);
-  BRIGHT[3]=pow((2000-(pow(pow(2000-i,2),.5))),3.4)*255/pow(2000,3.4);
-  BRIGHT[4]=pow((2000-(pow(pow(2000-i,2),.5))),4.6)*255/pow(2000,4.6);
-
-  main_counter += 10;
-  counter_shutoff +=10;  
-  if((trigger == 500) && (i >= 1500)){trigger = 250; main_counter = 0;}
-  if(counter_shutoff > 50){shutoff = 0;}
-  if(counter_shutoff > trigger){counter_shutoff = 0; shutoff = 1;}
-  if((trigger == 125) && ((counter_shutoff - 5) % 125 == 0)){counter_shutoff = 0; shutoff = 1;}
-  /*if(main_counter >= trigger)
+  short int trigger = 500;
+  short int main_counter;    // for change in tempo of strobe
+  short int counter_shutoff; // for strobe effect (shutoff)
+  bool shutoff = 1;
+  for (int i = 0; i<3000; i=i+10)
   {
-    if(BRIGHT[0]==255)
-    {
-      BRIGHT[0]=255;
-      BRIGHT[5]=255;
-    }
-    else
-    {
-      BRIGHT[0]=0;
-      BRIGHT[5]=0;
-    }
-    main_counter = 0;
-  }
-  digitalWrite(PINS_FOR_FLICKER[0], shutoff);
-  analogWrite(PINS_FOR_FLICKER[1], BRIGHT[1]);
-  analogWrite(PINS_FOR_FLICKER[2], BRIGHT[2]);
-  analogWrite(PINS_FOR_FLICKER[3], BRIGHT[3]);
-  analogWrite(PINS_FOR_FLICKER[4], BRIGHT[4]);
-  digitalWrite(PINS_FOR_FLICKER[5], shutoff);
+    delay(10);
+    BRIGHT[1]=pow((2000-(pow(pow(2000-i,2),.5))),0.8)*255/pow(2000,0.8);
+    BRIGHT[2]=pow((2000-(pow(pow(2000-i,2),.5))),2.2)*255/pow(2000,2.2);
+    BRIGHT[3]=pow((2000-(pow(pow(2000-i,2),.5))),3.4)*255/pow(2000,3.4);
+    BRIGHT[4]=pow((2000-(pow(pow(2000-i,2),.5))),4.6)*255/pow(2000,4.6);
 
-}
-digitalWrite(PINS_FOR_FLICKER[0], LOW);
-digitalWrite(PINS_FOR_FLICKER[1], LOW);
-digitalWrite(PINS_FOR_FLICKER[2], LOW);
-digitalWrite(PINS_FOR_FLICKER[3], LOW);
-digitalWrite(PINS_FOR_FLICKER[4], LOW);
-digitalWrite(PINS_FOR_FLICKER[5], LOW);
-set = 44; 
-Most_staying_alive_notes(added_divider, set);
+    main_counter += 10;
+    counter_shutoff +=10;  
+    if((trigger == 500) && (i >= 1500)){trigger = 250; main_counter = 0;}
+    if(counter_shutoff > 50){shutoff = 0;}
+    if(counter_shutoff > trigger){counter_shutoff = 0; shutoff = 1;}
+    if((trigger == 125) && ((counter_shutoff - 5) % 125 == 0)){counter_shutoff = 0; shutoff = 1;}
+    /*if(main_counter >= trigger)
+    {
+      if(BRIGHT[0]==255)
+      {
+        BRIGHT[0]=255;
+        BRIGHT[5]=255;
+      }
+      else
+      {
+        BRIGHT[0]=0;
+        BRIGHT[5]=0;
+      }
+      main_counter = 0;
+    }*/
+    digitalWrite(PINS_FOR_FLICKER[0], shutoff);
+    analogWrite(PINS_FOR_FLICKER[1], BRIGHT[1]);
+    analogWrite(PINS_FOR_FLICKER[2], BRIGHT[2]);
+    analogWrite(PINS_FOR_FLICKER[3], BRIGHT[3]);
+    analogWrite(PINS_FOR_FLICKER[4], BRIGHT[4]);
+    digitalWrite(PINS_FOR_FLICKER[5], shutoff);
+
+  }
+  digitalWrite(PINS_FOR_FLICKER[0], LOW);
+  digitalWrite(PINS_FOR_FLICKER[1], LOW);
+  digitalWrite(PINS_FOR_FLICKER[2], LOW);
+  digitalWrite(PINS_FOR_FLICKER[3], LOW);
+  digitalWrite(PINS_FOR_FLICKER[4], LOW);
+  digitalWrite(PINS_FOR_FLICKER[5], LOW);
+  set = 44; 
+  Most_staying_alive_notes(added_divider, set);
 }
 void Most_staying_alive_notes(byte added_divider, byte set) {
   // Remember, the array is twice the number of notes (notes + durations)
@@ -683,4 +749,4 @@ void Startup_Sequence()
   digitalWrite(PINS_FOR_FLICKER[3],1);
   digitalWrite(PINS_FOR_FLICKER[4],1);
   digitalWrite(PINS_FOR_FLICKER[5],1);
-}*/
+}

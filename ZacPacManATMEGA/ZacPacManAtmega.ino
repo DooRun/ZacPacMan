@@ -5,8 +5,8 @@
  * Thanks to Nick Kantack for flicker code / algorhythm along with much electrical circuit support. 
 */
 
-//----- DEFINITIONS start -----//
-//----- PACMAN AND MS PACMAN SONG INFO start -----//
+//----- DEFINITIONS -----//
+//----- PACMAN AND MS PACMAN SONG INFO -----//
 #define NOTE_B0  31
 #define NOTE_C1  33
 #define NOTE_CS1 35
@@ -170,7 +170,7 @@ byte PIN;
 byte TOGGLE;
 //----- end GENERAL VARIABLES
 
-//----- LIBRARIES start -----//
+//----- LIBRARIES -----//
 #include <math.h>
 #include "FlickerController.h"
 #include <SoftwareSerial.h>    // Include software serial library, ESP8266 library dependency
@@ -181,9 +181,9 @@ byte TOGGLE;
   //  Arduino pin 1 to voltage divider then to ESP8266 RX
   //  Connect GND from the Arduiono to GND on the ESP8266
   //  Pull ESP8266 CH_PD HIGH
-SoftwareSerial mySerial(7,8);  // RX,TX  (7,8 FOR arduino board but NOT FOR ATMEGA CHIP!!! WHICH IS 0,1)
+SoftwareSerial mySerial(0,1);  // RX,TX  (7,8 FOR arduino board but NOT FOR ATMEGA CHIP!!! WHICH IS 0,1)
 long SERIAL_TIMEOUT = 350; // This is needed for serial read otherwise, may not read all the data.
-bool ESP_SPOKE;
+bool MESSAGE_RECEIVED;
 String MESSAGE_INCOMING = ""; 
 int message_length;
 String CMD_CAT_STRING;  // <== command_category_string
@@ -195,7 +195,6 @@ int MESSAGE_PART_LENGTH[99];
 
 //----- Message and other variables -----//
 short data_count;                    // counter for number of characters stored or printed.
-//long SERIAL_TIMEOUT = 150;         // This is needed for serial read otherwise, may not read all the data.
 unsigned char c;                   // char read by client from server http reply
 unsigned char data_line [601];     // this will be an array holding the invidiually read data points in ASCII value.
 int ZPMZ_end;  // This is the first position in the data_line array after ZPMZ has been found.
@@ -252,24 +251,20 @@ void loop()
     data_count = 0;
     lastTimeSerialAvailable = millis(); 
     while (mySerial.available())
-   
     {
-      //delay(1);
+      MESSAGE_RECEIVED = true;
       data_count +=1;
       char c = mySerial.read(); // read a byte
       data_line[data_count]=c;
       delay(1);
       Serial.write(c);   //<---Z?
-      //delay(1);
       if(c == 90)   // Z was found
       {
-        //Serial.print("1found");
         data_count +=1;
         c = mySerial.read();    // read a byte 
         data_line[data_count]=c;
         delay(1);
         Serial.write(c);  //<---P?
-        //delay(1); 
         if(c == 80)    // P was found
         {
           data_count +=1;
@@ -277,7 +272,6 @@ void loop()
           data_line[data_count]=c;
           delay(1);
           Serial.write(c); //<---M?
-          //delay(2);
           if(c == 77)   // M was found
           {
             data_count +=1;
@@ -285,27 +279,21 @@ void loop()
             data_line[data_count]=c;
             delay(1);
             Serial.write(c); //<---Z?
-            //delay(1);
             if(c == 90)   // Z was found for a total of ZPMZ
             {
               Serial.println("");
               //Serial.println("ZPMZ WAS found");
               ZPMZ_end = data_count;
               Serial.write(90);  // Z <======= Need to write ZPMZ since it was found and removed from serial buffer...
-              //delay(2);
               Serial.write(80);  // P
-              //delay(2);
               Serial.write(77);  // M
-              //delay(2);
               Serial.write(90);  // Z
-              //delay(2);
               while (mySerial.available())  // while there are bytes to read from the client,
               {
                 data_count +=1;
                 c = mySerial.read(); // read a byte
                 data_line[data_count]=c;
                 Serial.write(c);  //<======= DO NOT comment this Serial.write statement as part of disabling DEBUG
-                //data_line [data_count] = c;
                 if(c==120){break_out=1;}  // 120 is the ASCII value for lower case x.
                 if(break_out==1){break;}
                 delay(2);
@@ -321,8 +309,11 @@ void loop()
   }
   break_out = 0;
   //----- end READ/STORE WANTED DATA FROM RTL8720DN_BW PLACED IN SERIAL BUFFER IF IT EXISTS
+
+  //----- INTERPRET MESSAGE -----//
   if(data_count >0)
   {
+    MESSAGE_RECEIVED == true;
     Serial.println("");
     Serial.println(data_count);
 
@@ -346,85 +337,12 @@ void loop()
     Serial.println("");
     mySerial.flush();
     data_count=0;
-  
-    
-  
-
-/*
-
-  //----- INTERPRET/PRINT THE DATA OVER THE SERIAL PORT IF NEW DATA EXISTS -----// 
-  if(data_count > 0)  // if a new set of data has been read, by this point it has been stored and is ready to be processed.
-  {
-    delay(1);
-
-  //---OBTAIN MESSAGE FROM ESP8266---//
-  MESSAGE_INCOMING = "";
-  char c;
-  if (mySerial.available())  // read and process buffer data.
-  {
-    c=mySerial.read();
-    Serial.write(c);
-    CMD_CAT_VAL = c - 48 * 10;
-
-    c=mySerial.read();
-    Serial.write(c);
-    CMD_CAT_VAL += c - 48;
-
-    Serial.println();
-    Serial.println("cmd_cat_val = ");
-    Serial.println(CMD_CAT_VAL);
-
-    c=mySerial.read();
-    Serial.write(c);
-    CMD_VAL_VAL += c - 48;
-   
-    Serial.println();
-    Serial.println("cmd_val_val = ");
-    Serial.println(CMD_VAL_VAL);
-
-    mySerial.flush();
-
+    //----- end INTERPRET MESSAGE
   }
-}
-  /*
-  {
-    //Serial.println("================");
-    delay(2);  // 5 seems to work.  I put it at 7.  If garbage is communicated, increase this value.  10 is shown online for a good value.
-    ESP_SPOKE = true;
-    while (mySerial.available() > 0)
-    {
-      c = mySerial.read();  // read a byte
-      MESSAGE_INCOMING.concat(c);
-      delay(1);
-      Serial.write(c);
-    }
-  }
-  //mySerial.flush();
-  //---end OBTAIN MESSAGE FROM ESP8266
 
   //---UPDATE VARIABLES IF MESSAGE WAS RECEIVED---//
-  if(ESP_SPOKE == true)  
+  if(MESSAGE_RECEIVED == true)  
   {
-    //Serial.println();
-    //Serial.println("Message incoming =...");
-    //Serial.println(MESSAGE_INCOMING);
-    //Serial.println("...end");  
-    CMD_CAT_STRING = "";  // reset
-    CMD_CAT_STRING = MESSAGE_INCOMING.substring(0,2);
-    CMD_CAT_VAL = CMD_CAT_STRING.toInt();
-
-    CMD_VAL_STRING = "";  // reset
-    CMD_VAL_STRING = MESSAGE_INCOMING.substring(3,MESSAGE_PART_LENGTH[CMD_CAT_VAL]-1);  //was (4...-2)
-    CMD_VAL_VAL = CMD_VAL_STRING.toInt();
-     
-    Serial.println();
-    Serial.println("cmd_cat_val = ");
-    Serial.println(CMD_CAT_VAL);
-   
-    Serial.println();
-    Serial.println("cmd_val_val = ");
-    Serial.println(CMD_VAL_VAL);
-  */
     if(CMD_CAT_VAL == 11){if(CMD_VAL_VAL == 1){M_EN = 1;}else{M_EN = 0;}}  // Master enable
     if(CMD_CAT_VAL == 12){if(CMD_VAL_VAL == 1){L_EN = 1;}else{L_EN = 0;}}  // Light enable
     if(CMD_CAT_VAL == 13){if(CMD_VAL_VAL == 1){S_EN = 1; play_MsPacMan_intro_song(3);}else{S_EN = 1;play_PacMan_intro_song(3);}}  // Sound enable<---Change sound enable else S_EN=0 eventually
@@ -440,7 +358,7 @@ void loop()
     if(CMD_CAT_VAL == 23){DARK_TRIGGER = CMD_CAT_VAL;}  // Light sensor trigger value
     if(CMD_CAT_VAL == 24){PERF_NUM = CMD_CAT_VAL;}      // Performance number
        
-    ESP_SPOKE = false;
+    MESSAGE_RECEIVED = false;
   }
   //---end UPDATE VARIABLES IF MESSAGE WAS RECEIVED  }
   
@@ -471,8 +389,8 @@ void loop()
   
   //if(ROOM_DARK == 0){analogWrite(PINS_FOR_FLICKER[3],255);}else{analogWrite(PINS_FOR_FLICKER[3],0);}
   if(MOTION_DETECTED_HOLD == 1){L_EN=1;}else{L_EN = 1;}
-  */
-
+  */  
+  //digitalWrite(13,CLY_EN);
   digitalWrite(PINS_FOR_FLICKER[0], 1 * M_EN * L_EN * PIN_EN);
   digitalWrite(PINS_FOR_FLICKER[1], 1 * M_EN * L_EN * CLY_EN);
   digitalWrite(PINS_FOR_FLICKER[2], 1 * M_EN * L_EN * CHE_EN);

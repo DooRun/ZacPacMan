@@ -101,8 +101,8 @@ void setup()
 
   while (status != WL_CONNECTED)  // attempt to connect to Wifi network:
   {
-    Serial.print("Attempting to connect to SSID: ");
-    Serial.println(ssid);
+    //DEBUGSerial.print("Attempting to connect to SSID: ");
+    //DEBUGSerial.println(ssid);
     status = WiFi.begin(ssid, pass);    // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
     delay(10000);    // wait 10 seconds for connection:
   }
@@ -130,19 +130,19 @@ void loop()
       if (client.available())  // if there are bytes to read from the client,
       {    
         char c = client.read(); // read a byte
-        //Debug Serial.write(c);
+        //DEBUG Serial.write(c);
         if(c == 90)   // Z was found
         {
           c = client.read();    // read a byte 
-          //Debug Serial.write(c);  
+          //DEBUG Serial.write(c);  
           if(c == 80)    // P was found
           {
             c = client.read();    // read a byte 
-            //Debug Serial.write(c);
+            //DEBUG Serial.write(c);
             if(c == 77)   // M was found
             {
               c = client.read();    // read a byte 
-              //Debug Serial.write(c);
+              //DEBUG Serial.write(c);
               if(c == 90)   // Z was found for a total of ZPMZ
               {
                 Serial.write(90);  // Z <======= Need to write ZPMZ since it was found and removed from serial buffer...
@@ -158,7 +158,6 @@ void loop()
                   data_count += 1;
                   c = client.read(); // read a byte
                   Serial.write(c);  //<======= DO NOT comment this Serial.write statement as part of disabling DEBUG
-                  //data_line [data_count] = c;
                   MESSAGE_TO_ATMEGA += c;
                   if(c==120){break_out=1;}  // 120 is the ASCII value for lower case x.
                   if(break_out==1){break;}
@@ -171,6 +170,11 @@ void loop()
       }  
       if(break_out==1){break;}
     }
+    //DEBUG Serial.println("");
+    //DEBUG Serial.print("MESSAGE_TO_ATMEGA =");
+    //DEBUG Serial.println(MESSAGE_TO_ATMEGA);
+    //DEBUG Serial.println("");
+
     digitalWrite(LED_G, LOW); // light indicator Tthat ZPMZ was found.
     digitalWrite(LED_B, HIGH); // light indicator connection was made.
     client.flush();
@@ -193,30 +197,30 @@ void loop()
 
     client.println("<body><h1>ZACPACMAN</h1>");    // Web Page Heading
 
-    if (MESSAGE_TO_ATMEGA =="11:0"){M_EN_STATE = "MASTER OFF";}
-    if (MESSAGE_TO_ATMEGA =="11:1"){M_EN_STATE = "MASTER ON ";}
-    if (MESSAGE_TO_ATMEGA =="12:0"){L_EN_STATE = "LIGHT OFF";}
-    if (MESSAGE_TO_ATMEGA =="12:1"){L_EN_STATE = "LIGHT ON ";}
-    if (MESSAGE_TO_ATMEGA =="13:0"){S_EN_STATE = "SOUND OFF";}
-    if (MESSAGE_TO_ATMEGA =="13:1"){S_EN_STATE = "SOUND ON ";}
-    if (MESSAGE_TO_ATMEGA =="14:0"){MO_EN_STATE = "MOTION OFF";}
-    if (MESSAGE_TO_ATMEGA =="14:1"){MO_EN_STATE = "MOTION ON ";}
-    if (MESSAGE_TO_ATMEGA =="15:0"){CL_EN_STATE = "CLOCK OFF";}
-    if (MESSAGE_TO_ATMEGA =="15:1"){CL_EN_STATE = "CLOCK ON ";}
-    if (MESSAGE_TO_ATMEGA =="16:0"){PIN_EN_STATE = "PINKY OFF";}
-    if (MESSAGE_TO_ATMEGA =="16:1"){PIN_EN_STATE = "PINKY ON ";}
-    if (MESSAGE_TO_ATMEGA =="17:0"){CLY_EN_STATE = "CLYDE OFF";}
-    if (MESSAGE_TO_ATMEGA =="17:1"){CLY_EN_STATE = "CLYDE ON ";}
-    if (MESSAGE_TO_ATMEGA =="18:0"){CHE_EN_STATE = "CHERRY OFF";}
-    if (MESSAGE_TO_ATMEGA =="18:1"){CHE_EN_STATE = "CHERRY ON ";}
-    if (MESSAGE_TO_ATMEGA =="19:0"){PAC_EN_STATE = "PACMAN OFF";}
-    if (MESSAGE_TO_ATMEGA =="19:1"){PAC_EN_STATE = "PACMAN ON ";}
-    if (MESSAGE_TO_ATMEGA =="20:0"){BLI_EN_STATE = "BLINKY OFF";}
-    if (MESSAGE_TO_ATMEGA =="20:1"){BLI_EN_STATE = "BLINKY ON ";}
-    if (MESSAGE_TO_ATMEGA =="21:0"){INK_EN_STATE = "INKY OFF";}
-    if (MESSAGE_TO_ATMEGA =="21:1"){INK_EN_STATE = "INKY ON ";}
-    if (MESSAGE_TO_ATMEGA =="22:0"){LS_EN_STATE = "LIGHT SENSOR OFF";}
-    if (MESSAGE_TO_ATMEGA =="22:1"){LS_EN_STATE = "LIGHT SENSOR ON ";}
+    if (MESSAGE_TO_ATMEGA =="11:0x"){M_EN_STATE = "MASTER OFF";}
+    if (MESSAGE_TO_ATMEGA =="11:1x"){M_EN_STATE = "MASTER ON ";}
+    if (MESSAGE_TO_ATMEGA =="12:0x"){L_EN_STATE = "LIGHT OFF";}
+    if (MESSAGE_TO_ATMEGA =="12:1x"){L_EN_STATE = "LIGHT ON ";}
+    if (MESSAGE_TO_ATMEGA =="13:0x"){S_EN_STATE = "SOUND OFF";}
+    if (MESSAGE_TO_ATMEGA =="13:1x"){S_EN_STATE = "SOUND ON ";}
+    if (MESSAGE_TO_ATMEGA =="14:0x"){MO_EN_STATE = "MOTION OFF";}
+    if (MESSAGE_TO_ATMEGA =="14:1x"){MO_EN_STATE = "MOTION ON ";}
+    if (MESSAGE_TO_ATMEGA =="15:0x"){CL_EN_STATE = "CLOCK OFF";}
+    if (MESSAGE_TO_ATMEGA =="15:1x"){CL_EN_STATE = "CLOCK ON ";}
+    if (MESSAGE_TO_ATMEGA =="16:0x"){PIN_EN_STATE = "PINKY OFF";}
+    if (MESSAGE_TO_ATMEGA =="16:1x"){PIN_EN_STATE = "PINKY ON ";}
+    if (MESSAGE_TO_ATMEGA =="17:0x"){CLY_EN_STATE = "CLYDE OFF";}
+    if (MESSAGE_TO_ATMEGA =="17:1x"){CLY_EN_STATE = "CLYDE ON ";}
+    if (MESSAGE_TO_ATMEGA =="18:0x"){CHE_EN_STATE = "CHERRY OFF";}
+    if (MESSAGE_TO_ATMEGA =="18:1x"){CHE_EN_STATE = "CHERRY ON ";}
+    if (MESSAGE_TO_ATMEGA =="19:0x"){PAC_EN_STATE = "PACMAN OFF";}
+    if (MESSAGE_TO_ATMEGA =="19:1x"){PAC_EN_STATE = "PACMAN ON ";}
+    if (MESSAGE_TO_ATMEGA =="20:0x"){BLI_EN_STATE = "BLINKY OFF";}
+    if (MESSAGE_TO_ATMEGA =="20:1x"){BLI_EN_STATE = "BLINKY ON ";}
+    if (MESSAGE_TO_ATMEGA =="21:0x"){INK_EN_STATE = "INKY OFF";}
+    if (MESSAGE_TO_ATMEGA =="21:1x"){INK_EN_STATE = "INKY ON ";}
+    if (MESSAGE_TO_ATMEGA =="22:0x"){LS_EN_STATE = "LIGHT SENSOR OFF";}
+    if (MESSAGE_TO_ATMEGA =="22:1x"){LS_EN_STATE = "LIGHT SENSOR ON ";}
 
     if (M_EN_STATE == "MASTER OFF"){client.println("<p><a href=\"ZPMZ11:1x,\"><button class=\"button\">MASTER OFF</button></a></p>");}
     if (M_EN_STATE == "MASTER ON "){client.println("<p><a href=\"ZPMZ11:0x,\"><button class=\"button button2\">MASTER ON </button></a></p>");}
@@ -231,8 +235,8 @@ void loop()
     if (PIN_EN_STATE == "PINKY OFF"){client.println("<p><a href=\"ZPMZ16:1x,\"><button class=\"button\">PINKY OFF</button></a></p>");}
     if (PIN_EN_STATE == "PINKY ON "){client.println("<p><a href=\"ZPMZ16:0x,\"><button class=\"button button2\">PINKY ON </button></a></p>");}
     if (CLY_EN_STATE == "CLYDE OFF"){client.println("<p><a href=\"ZPMZ17:1x,\"><button class=\"button\">CLYDE OFF</button></a></p>");}
-    if (CLY_EN_STATE == "CLYDE ON "){client.println("<p><a href=\"/ ZPMZ17:0x,\"><button class=\"button button2\">CLYDE ON </button></a></p>");}
-    if (CHE_EN_STATE == "CHERRY OFF"){client.println("<p><a href=\"/ ZPMZ18:1x,\"><button class=\"button\">CHERRY OFF</button></a></p>");}
+    if (CLY_EN_STATE == "CLYDE ON "){client.println("<p><a href=\"ZPMZ17:0x,\"><button class=\"button button2\">CLYDE ON </button></a></p>");}
+    if (CHE_EN_STATE == "CHERRY OFF"){client.println("<p><a href=\"ZPMZ18:1x,\"><button class=\"button\">CHERRY OFF</button></a></p>");}
     if (CHE_EN_STATE == "CHERRY ON "){client.println("<p><a href=\"ZPMZ18:0x,\"><button class=\"button button2\">CHERRY ON </button></a></p>");}
     if (PAC_EN_STATE == "PACMAN OFF"){client.println("<p><a href=\"ZPMZ19:1x,\"><button class=\"button\">PACMAN OFF</button></a></p>");}
     if (PAC_EN_STATE == "PACMAN ON "){client.println("<p><a href=\"ZPMZ19:0x,\"><button class=\"button button2\">PACMAN ON </button></a></p>");}

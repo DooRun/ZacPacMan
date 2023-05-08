@@ -191,7 +191,7 @@ int CMD_CAT_VAL;        // <== command_category_value
 String CMD_VAL_STRING;  // <== command_value_string
 int CMD_VAL_VAL;        // <== command_value_value
 
-int MESSAGE_PART_LENGTH[99];
+int CMD_VAL_LENGTH[99];
 
 //----- Message and other variables -----//
 short data_count;                    // counter for number of characters stored or printed.
@@ -217,20 +217,25 @@ void setup() {
   flicker_controller.setup_controller();
   //play_Staying_Alive_song(4);
   //Startup_Sequence();
-  MESSAGE_PART_LENGTH[11] = 5;  // Master enable
-  MESSAGE_PART_LENGTH[12] = 5;  // Light enable
-  MESSAGE_PART_LENGTH[13] = 5;  // Sound enable
-  MESSAGE_PART_LENGTH[14] = 5;  // Motion enable
-  MESSAGE_PART_LENGTH[15] = 5;  // Clock enable
-  MESSAGE_PART_LENGTH[16] = 5;  // Light Pinky  PIN
-  MESSAGE_PART_LENGTH[17] = 5;  // Light Clyde  CLY
-  MESSAGE_PART_LENGTH[18] = 5;  // Light Cherry CHE
-  MESSAGE_PART_LENGTH[19] = 5;  // Light PacMan PAC
-  MESSAGE_PART_LENGTH[20] = 5;  // Light Blinky BLI
-  MESSAGE_PART_LENGTH[21] = 5;  // Light Inky   INK
-  MESSAGE_PART_LENGTH[22] = 5;  // Light Sensor enable
-  MESSAGE_PART_LENGTH[23] = 8;  // Light Sensor trigger value
-  MESSAGE_PART_LENGTH[24] = 6;  // Performance number
+  CMD_VAL_LENGTH[11] = 1;  // Master enable
+  CMD_VAL_LENGTH[12] = 1;  // Light enable
+  CMD_VAL_LENGTH[13] = 1;  // Sound enable
+  CMD_VAL_LENGTH[14] = 1;  // Motion enable
+  CMD_VAL_LENGTH[15] = 1;  // Clock enable
+  CMD_VAL_LENGTH[16] = 1;  // Light Pinky  PIN
+  CMD_VAL_LENGTH[17] = 1;  // Light Clyde  CLY
+  CMD_VAL_LENGTH[18] = 1;  // Light Cherry CHE
+  CMD_VAL_LENGTH[19] = 1;  // Light PacMan PAC
+  CMD_VAL_LENGTH[20] = 1;  // Light Blinky BLI
+  CMD_VAL_LENGTH[21] = 1;  // Light Inky   INK
+  CMD_VAL_LENGTH[22] = 1;  // Light Sensor enable
+  CMD_VAL_LENGTH[23] = 4;  // Light Sensor trigger value
+  CMD_VAL_LENGTH[24] = 1;  // Night Light enable
+  CMD_VAL_LENGTH[25] = 1;  // Location (SF=0, Brkgs=1) (ip address)
+  CMD_VAL_LENGTH[26] = 1;  // Alarm enable
+  CMD_VAL_LENGTH[27] = 6;  // Alarm date
+  CMD_VAL_LENGTH[28] = 6;  // Alarm time
+  CMD_VAL_LENGTH[29] = 2;  // Performance number
 
   digitalWrite(PINS_FOR_FLICKER[0], 1);
   digitalWrite(PINS_FOR_FLICKER[1], 1);
@@ -331,6 +336,13 @@ void loop()
 
     CMD_VAL_VAL = data_line[ZPMZ_end+4]-48;
     Serial.print("CMD_VAL_VAL = ");
+    if(CMD_VAL_LENGTH[CMD_CAT_VAL]>1)
+    {
+      for (i = 1; i<CMD_VAL_LENGTH[CMD_CAT_VAL]; i++)
+      {
+        CMD_VAL_VAL = CMD_VAL_VAL*10+data_line[ZPMZ_end+4+i]-48;
+      }
+    }
     Serial.println(CMD_VAL_VAL);
 
     Serial.println("");
@@ -345,18 +357,23 @@ void loop()
   {
     if(CMD_CAT_VAL == 11){if(CMD_VAL_VAL == 1){M_EN = 1;}else{M_EN = 0;}}  // Master enable
     if(CMD_CAT_VAL == 12){if(CMD_VAL_VAL == 1){L_EN = 1;}else{L_EN = 0;}}  // Light enable
-    if(CMD_CAT_VAL == 13){if(CMD_VAL_VAL == 1){S_EN = 1; play_MsPacMan_intro_song(3);}else{S_EN = 1;play_PacMan_intro_song(3);}}  // Sound enable<---Change sound enable else S_EN=0 eventually
-    if(CMD_CAT_VAL == 14){if(CMD_VAL_VAL == 1){MO_EN = 1; flicker_controller.do_flicker(true);}else{MO_EN = 0; flicker_controller.do_flicker(false);}}  // Motion enable
-    if(CMD_CAT_VAL == 15){if(CMD_VAL_VAL == 1){CL_EN = 1;}else{CL_EN = 0; Startup_Sequence();}}  // Clock enable
+    if(CMD_CAT_VAL == 13){if(CMD_VAL_VAL == 1){S_EN = 1;}else{S_EN = 1;}}  // Sound enable<---Change sound enable else S_EN=0 eventually
+    if(CMD_CAT_VAL == 14){if(CMD_VAL_VAL == 1){MO_EN = 1;}else{MO_EN = 0;}}  // Motion enable
+    if(CMD_CAT_VAL == 15){if(CMD_VAL_VAL == 1){CL_EN = 1;}else{CL_EN = 0;}}  // Clock enable
     if(CMD_CAT_VAL == 16){if(CMD_VAL_VAL == 1){PIN_EN = 1;}else{PIN_EN = 0;}}  // Light Pinky  PIN flickerPin0
     if(CMD_CAT_VAL == 17){if(CMD_VAL_VAL == 1){CLY_EN = 1;}else{CLY_EN = 0;}}  // Light Clyde  CLY flickerPin1
     if(CMD_CAT_VAL == 18){if(CMD_VAL_VAL == 1){CHE_EN = 1;}else{CHE_EN = 0;}}  // Light Cherry CHE flickerPin2
     if(CMD_CAT_VAL == 19){if(CMD_VAL_VAL == 1){PAC_EN = 1;}else{PAC_EN = 0;}}  // Light PacMan PAC flickerPin3
     if(CMD_CAT_VAL == 20){if(CMD_VAL_VAL == 1){BLI_EN = 1;}else{BLI_EN = 0;}}  // Light Blinky BLI flickerPin4
     if(CMD_CAT_VAL == 21){if(CMD_VAL_VAL == 1){INK_EN = 1;}else{INK_EN = 0;}}  // Light Inky   INK flickerPin5
-    if(CMD_CAT_VAL == 22){if(CMD_VAL_VAL == 1){LS_EN = 1;}else{LS_EN = 0;}}  // LIGHT SENSOR enable
-    if(CMD_CAT_VAL == 23){DARK_TRIGGER = CMD_CAT_VAL;}  // Light sensor trigger value
-    if(CMD_CAT_VAL == 24){PERF_NUM = CMD_CAT_VAL;}      // Performance number
+    if(CMD_CAT_VAL == 22){if(CMD_VAL_VAL == 1){LS_EN = 1;}else{LS_EN = 0;}}    // LIGHT SENSOR enable
+    if(CMD_CAT_VAL == 23){}  // Light Enable
+    if(CMD_CAT_VAL == 24){}  // Light Sensor Trigger Value
+    if(CMD_CAT_VAL == 25){}  // Location (SF=1, Brkgs=2) (ip address)
+    if(CMD_CAT_VAL == 26){}  // Alarm Enable
+    if(CMD_CAT_VAL == 27){}  // Alarm Date
+    if(CMD_CAT_VAL == 28){}  // Alarm Time
+    if(CMD_CAT_VAL == 29){PERF_NUM = CMD_VAL_VAL;}      // Performance (song/light show)
        
     MESSAGE_RECEIVED = false;
   }
@@ -365,8 +382,35 @@ void loop()
   delay(1);
   //-----PLAY SELECTED PERFORMANCE-----//
   //if((CMD_CAT_VAL == 11) && (CMD_VAL_VAL ==1)){play_PacMan_intro_song(3); PERF_NUM = 0;CMD_CAT_VAL=0;}
-  if(PERF_NUM == 71){play_PacMan_intro_song(3); PERF_NUM = 0;}
-  if(PERF_NUM == 72){play_MsPacMan_intro_song(3); PERF_NUM = 0;}
+  if(CMD_CAT_VAL = 29)
+  {
+    if(PERF_NUM == 71){play_PacMan_intro_song(3);    PERF_NUM = 0;}
+    if(PERF_NUM == 72){play_MsPacMan_intro_song(3); PERF_NUM = 0;}
+    if(PERF_NUM == 73){play_Staying_Alive_song(3);   PERF_NUM = 0;}
+    if(PERF_NUM == 74)
+    {
+      digitalWrite(PINS_FOR_FLICKER[0], 0);
+      digitalWrite(PINS_FOR_FLICKER[1], 0);
+      digitalWrite(PINS_FOR_FLICKER[2], 0);
+      digitalWrite(PINS_FOR_FLICKER[3], 0);
+      digitalWrite(PINS_FOR_FLICKER[4], 0);   
+      digitalWrite(PINS_FOR_FLICKER[5], 0); 
+      flicker_controller.do_flicker(false);
+      PERF_NUM = 0;
+    }
+    if(PERF_NUM == 75)
+    {
+      digitalWrite(PINS_FOR_FLICKER[0], 0);
+      digitalWrite(PINS_FOR_FLICKER[1], 0);
+      digitalWrite(PINS_FOR_FLICKER[2], 0);
+      digitalWrite(PINS_FOR_FLICKER[3], 0);
+      digitalWrite(PINS_FOR_FLICKER[4], 0);   
+      digitalWrite(PINS_FOR_FLICKER[5], 0); 
+      flicker_controller.do_flicker(true);
+      PERF_NUM = 0;
+    }
+    if(PERF_NUM == 76){Startup_Sequence(); PERF_NUM = 0;}
+  }
   //-----end PLAY SELECTED PERFORMANCE
   
   //----- RESPOND TO ESP8266 -----//

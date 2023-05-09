@@ -237,12 +237,7 @@ void setup() {
   CMD_VAL_LENGTH[28] = 6;  // Alarm time
   CMD_VAL_LENGTH[29] = 2;  // Performance number
 
-  digitalWrite(PINS_FOR_FLICKER[0], 1);
-  digitalWrite(PINS_FOR_FLICKER[1], 1);
-  digitalWrite(PINS_FOR_FLICKER[2], 1);
-  digitalWrite(PINS_FOR_FLICKER[3], 1);
-  digitalWrite(PINS_FOR_FLICKER[4], 1);   
-  digitalWrite(PINS_FOR_FLICKER[5], 1); 
+  all_lights_on(); 
 }
 
 void loop() 
@@ -385,31 +380,21 @@ void loop()
   if(CMD_CAT_VAL = 29)
   {
     if(PERF_NUM == 71){play_PacMan_intro_song(3);    PERF_NUM = 0;}
-    if(PERF_NUM == 72){play_MsPacMan_intro_song(3); PERF_NUM = 0;}
-    if(PERF_NUM == 73){play_Staying_Alive_song(3);   PERF_NUM = 0;}
+    if(PERF_NUM == 72){play_MsPacMan_intro_song(3);  PERF_NUM = 0;}
+    if(PERF_NUM == 73){play_Staying_Alive_song(4);   PERF_NUM = 0;}
     if(PERF_NUM == 74)
     {
-      digitalWrite(PINS_FOR_FLICKER[0], 0);
-      digitalWrite(PINS_FOR_FLICKER[1], 0);
-      digitalWrite(PINS_FOR_FLICKER[2], 0);
-      digitalWrite(PINS_FOR_FLICKER[3], 0);
-      digitalWrite(PINS_FOR_FLICKER[4], 0);   
-      digitalWrite(PINS_FOR_FLICKER[5], 0); 
-      flicker_controller.do_flicker(false);
+      all_lights_off();
+      flicker_controller.do_flicker(true);
       PERF_NUM = 0;
     }
     if(PERF_NUM == 75)
     {
-      digitalWrite(PINS_FOR_FLICKER[0], 0);
-      digitalWrite(PINS_FOR_FLICKER[1], 0);
-      digitalWrite(PINS_FOR_FLICKER[2], 0);
-      digitalWrite(PINS_FOR_FLICKER[3], 0);
-      digitalWrite(PINS_FOR_FLICKER[4], 0);   
-      digitalWrite(PINS_FOR_FLICKER[5], 0); 
-      flicker_controller.do_flicker(true);
+      all_lights_on(); 
+      flicker_controller.do_flicker(false);
       PERF_NUM = 0;
     }
-    if(PERF_NUM == 76){Startup_Sequence(); PERF_NUM = 0;}
+    if(PERF_NUM == 76){Startup_Sequence(); PERF_NUM = 0;}  //<--not in android studio yet and need to refine here first.
   }
   //-----end PLAY SELECTED PERFORMANCE
   
@@ -479,6 +464,7 @@ void fade_out_one_LED(){
 }
 
 void play_PacMan_intro_song(byte added_divider) {
+  all_lights_off();
   // Remember, the array is twice the number of notes (notes + durations)
   for (int thisNote = 0; thisNote < notes * 2; thisNote = thisNote + 2) 
   {
@@ -507,6 +493,7 @@ void play_PacMan_intro_song(byte added_divider) {
 }
 
 void play_MsPacMan_intro_song(byte added_divider) {
+  all_lights_off();
   // Remember, the array is twice the number of notes (notes + durations)
   for (int thisNote = 0; thisNote < notes2 * 2; thisNote = thisNote + 2) 
   {
@@ -524,14 +511,7 @@ void play_MsPacMan_intro_song(byte added_divider) {
     tone(13, melody2[thisNote], noteDuration * 0.9);
     if(notelights2[thisNote] < 6){digitalWrite(PINS_FOR_FLICKER[notelights2[thisNote]],HIGH);} else
     {
-      if((thisNote == 42) || (thisNote == 46)) 
-      {
-        digitalWrite(PINS_FOR_FLICKER[0], HIGH);
-        digitalWrite(PINS_FOR_FLICKER[1], HIGH);
-        digitalWrite(PINS_FOR_FLICKER[2], HIGH);
-        digitalWrite(PINS_FOR_FLICKER[4], HIGH);
-        digitalWrite(PINS_FOR_FLICKER[5], HIGH);
-      }        
+      if((thisNote == 42) || (thisNote == 46)){all_lights_on();}        
       if(thisNote > 42){digitalWrite(PINS_FOR_FLICKER[3], HIGH);}  
     }    
     // Wait for the specified duration before playing the next note.
@@ -545,17 +525,13 @@ void play_MsPacMan_intro_song(byte added_divider) {
 
 void play_Staying_Alive_song(byte added_divider) 
 {
+  all_lights_off();
   byte set = 44; 
   Most_staying_alive_notes(added_divider, set);
   set = 42;
   Most_staying_alive_notes(added_divider, set);
   //two long notes
-  digitalWrite(PINS_FOR_FLICKER[0], LOW);
-  digitalWrite(PINS_FOR_FLICKER[1], LOW);
-  digitalWrite(PINS_FOR_FLICKER[2], LOW);
-  digitalWrite(PINS_FOR_FLICKER[3], LOW);
-  digitalWrite(PINS_FOR_FLICKER[4], LOW);
-  digitalWrite(PINS_FOR_FLICKER[5], LOW);
+  all_lights_off();
   byte BRIGHT[6];
   for (int i = 2*NOTE_GS4; i<2*NOTE_AS4; i+=2)  //415 to 466, 830 932
   {
@@ -624,12 +600,7 @@ void play_Staying_Alive_song(byte added_divider)
     digitalWrite(PINS_FOR_FLICKER[5], shutoff);
 
   }
-  digitalWrite(PINS_FOR_FLICKER[0], LOW);
-  digitalWrite(PINS_FOR_FLICKER[1], LOW);
-  digitalWrite(PINS_FOR_FLICKER[2], LOW);
-  digitalWrite(PINS_FOR_FLICKER[3], LOW);
-  digitalWrite(PINS_FOR_FLICKER[4], LOW);
-  digitalWrite(PINS_FOR_FLICKER[5], LOW);
+  all_lights_off();
   set = 44; 
   Most_staying_alive_notes(added_divider, set);
 }
@@ -711,4 +682,22 @@ void Startup_Sequence()
   digitalWrite(PINS_FOR_FLICKER[3],1);
   digitalWrite(PINS_FOR_FLICKER[4],1);
   digitalWrite(PINS_FOR_FLICKER[5],1);
+}
+
+void all_lights_on(){
+  digitalWrite(PINS_FOR_FLICKER[0], HIGH);
+  digitalWrite(PINS_FOR_FLICKER[1], HIGH);
+  digitalWrite(PINS_FOR_FLICKER[2], HIGH);
+  digitalWrite(PINS_FOR_FLICKER[3], HIGH);
+  digitalWrite(PINS_FOR_FLICKER[4], HIGH);
+  digitalWrite(PINS_FOR_FLICKER[5], HIGH);
+}
+
+void all_lights_off(){
+  digitalWrite(PINS_FOR_FLICKER[0], LOW);
+  digitalWrite(PINS_FOR_FLICKER[1], LOW);
+  digitalWrite(PINS_FOR_FLICKER[2], LOW);
+  digitalWrite(PINS_FOR_FLICKER[3], LOW);
+  digitalWrite(PINS_FOR_FLICKER[4], LOW);
+  digitalWrite(PINS_FOR_FLICKER[5], LOW);
 }

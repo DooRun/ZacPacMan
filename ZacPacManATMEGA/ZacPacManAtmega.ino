@@ -136,15 +136,25 @@ int divider = 0, noteDuration = 0;
 const int MOTION_PIN = A4; // motion detector
 bool MOTION_DETECTED;
 bool MOTION_DETECTED_HOLD;
-const int MOTION_LIGHT_DURATION = 5000;    // duration of shelf lit after motion detected.
+const int MOTION_LIGHT_DURATION = 2000;    // duration of shelf lit after motion detected.
 unsigned long MOTION_OFF_TIME;
+
+bool MO_EN_PIN = 1;
+bool MO_EN_CLY = 1;
+bool MO_EN_CHE = 1;
+bool MO_EN_PAC = 1;
+bool MO_EN_BLI = 1;
+bool MO_EN_INK = 1;
+short MOTION_TRIGGER_COUNTS;
+bool REDUCE_MOTION_TRIGGER_COUNTS = 1;
+unsigned long REDUCE_COUNTS_AT_TIME = millis();
 //----- end MOTION RELATED
 
 //----- LIGHT SENSOR RELATED -----//
 const int PHOTO_RESISTOR = A5; // photoresistor for shop brightness (input)
 int ROOM_LIGHT;  // value of current room light
 bool ROOM_DARK;
-int DARK_TRIGGER = 100;  // Value below which room is considered dark (ROOM_DARK IS THEN SET TO 1)
+int DARK_TRIGGER = 500;  // Value below which room is considered dark (ROOM_DARK IS THEN SET TO 1)
 //----- end LIGHT SENSOR RELATED
 
 const int NUMBER_OF_FLICKER_PINS = 6;
@@ -168,6 +178,7 @@ int i;
 int j;
 byte PIN;
 byte TOGGLE;
+
 //----- end GENERAL VARIABLES
 
 //----- LIBRARIES -----//
@@ -243,94 +254,95 @@ void setup() {
 void loop() 
 {
   //----- READ/STORE WANTED DATA FROM RTL8720DN_BW PLACED IN SERIAL BUFFER IF IT EXISTS -----//
-  long lastTimeSerialAvailable = millis();
   ZPMZ_end = 0;
-  lastTimeSerialAvailable = millis();
-  while (millis() - lastTimeSerialAvailable < SERIAL_TIMEOUT)
-  { 
-    data_count = 0;
-    lastTimeSerialAvailable = millis(); 
-    while (mySerial.available())
-    {
-      MESSAGE_RECEIVED = true;
-      data_count +=1;
-      char c = mySerial.read(); // read a byte
-      data_line[data_count]=c;
-      delay(1);
-      Serial.write(c);   //<---Z?
-      if(c == 90)   // Z was found
+  if(mySerial.available())
+  {
+    long lastTimeSerialAvailable = millis();
+    while (millis() - lastTimeSerialAvailable < SERIAL_TIMEOUT)
+    { 
+      data_count = 0;
+      while (mySerial.available())
       {
+        MESSAGE_RECEIVED = true;
         data_count +=1;
-        c = mySerial.read();    // read a byte 
+        char c = mySerial.read(); // read a byte
         data_line[data_count]=c;
         delay(1);
-        Serial.write(c);  //<---P?
-        if(c == 80)    // P was found
+        Serial.write(c);   //<---Z?
+        if(c == 90)   // Z was found
         {
           data_count +=1;
           c = mySerial.read();    // read a byte 
           data_line[data_count]=c;
           delay(1);
-          Serial.write(c); //<---M?
-          if(c == 77)   // M was found
+          Serial.write(c);  //<---P?
+          if(c == 80)    // P was found
           {
             data_count +=1;
             c = mySerial.read();    // read a byte 
             data_line[data_count]=c;
             delay(1);
-            Serial.write(c); //<---Z?
-            if(c == 90)   // Z was found for a total of ZPMZ
+            Serial.write(c); //<---M?
+            if(c == 77)   // M was found
             {
-              Serial.println("");
-              //Serial.println("ZPMZ WAS found");
-              ZPMZ_end = data_count;
-              Serial.write(90);  // Z <======= Need to write ZPMZ since it was found and removed from serial buffer...
-              Serial.write(80);  // P
-              Serial.write(77);  // M
-              Serial.write(90);  // Z
-              while (mySerial.available())  // while there are bytes to read from the client,
+              data_count +=1;
+              c = mySerial.read();    // read a byte 
+              data_line[data_count]=c;
+              delay(1);
+              Serial.write(c); //<---Z?
+              if(c == 90)   // Z was found for a total of ZPMZ
               {
-                data_count +=1;
-                c = mySerial.read(); // read a byte
-                data_line[data_count]=c;
-                Serial.write(c);  //<======= DO NOT comment this Serial.write statement as part of disabling DEBUG
-                if(c==120){break_out=1;}  // 120 is the ASCII value for lower case x.
-                if(break_out==1){break;}
-                delay(2);
+                Serial.println("");
+                //Serial.println("ZPMZ WAS found");
+                ZPMZ_end = data_count;
+                Serial.write(90);  // Z <======= Need to write ZPMZ since it was found and removed from serial buffer...
+                Serial.write(80);  // P
+                Serial.write(77);  // M
+                Serial.write(90);  // Z
+                while (mySerial.available())  // while there are bytes to read from the client,
+                {
+                  data_count +=1;
+                  c = mySerial.read(); // read a byte
+                  data_line[data_count]=c;
+                  Serial.write(c);  //<======= DO NOT comment this Serial.write statement as part of disabling DEBUG
+                  if(c==120){break_out=1;}  // 120 is the ASCII value for lower case x.
+                  if(break_out==1){break;}
+                  delay(2);
+                }
               }
             }
           }
-        }
+          if(break_out==1){break;}
+        }  
         if(break_out==1){break;}
-      }  
+      }
       if(break_out==1){break;}
     }
-    if(break_out==1){break;}
+    break_out = 0;
   }
-  break_out = 0;
   //----- end READ/STORE WANTED DATA FROM RTL8720DN_BW PLACED IN SERIAL BUFFER IF IT EXISTS
 
   //----- INTERPRET MESSAGE -----//
   if(data_count >0)
   {
     MESSAGE_RECEIVED == true;
-    Serial.println("");
-    Serial.println(data_count);
+    //debugSerial.println("");
+    //debugSerial.println(data_count);
 
-    Serial.println("");
-    Serial.print("ZPMZ_end =");
-    Serial.println(ZPMZ_end);
+    //debugSerial.println("");
+    //debugSerial.print("ZPMZ_end =");
+    //debugSerial.println(ZPMZ_end);
 
-    Serial.println("");
-    Serial.print("data line of ZPMZ =");
-    Serial.println(data_line[ZPMZ_end+1]);
+    //debugSerial.println("");
+    //debugSerial.print("data line of ZPMZ =");
+    //debugSerial.println(data_line[ZPMZ_end+1]);
 
     CMD_CAT_VAL = (data_line[ZPMZ_end+1]-48)*10 + data_line[ZPMZ_end+2]-48;
-    Serial.print("CMD_CAT_VAL = ");
-    Serial.println(CMD_CAT_VAL);
+    //debugSerial.print("CMD_CAT_VAL = ");
+    //debugSerial.println(CMD_CAT_VAL);
 
     CMD_VAL_VAL = data_line[ZPMZ_end+4]-48;
-    Serial.print("CMD_VAL_VAL = ");
+    //debugSerial.print("CMD_VAL_VAL = ");
     if(CMD_VAL_LENGTH[CMD_CAT_VAL]>1)
     {
       for (i = 1; i<CMD_VAL_LENGTH[CMD_CAT_VAL]; i++)
@@ -338,10 +350,10 @@ void loop()
         CMD_VAL_VAL = CMD_VAL_VAL*10+data_line[ZPMZ_end+4+i]-48;
       }
     }
-    Serial.println(CMD_VAL_VAL);
+    //debugSerial.println(CMD_VAL_VAL);
 
-    Serial.println("");
-    Serial.println("");
+    //debugSerial.println("");
+    //debugSerial.println("");
     mySerial.flush();
     data_count=0;
     //----- end INTERPRET MESSAGE
@@ -352,7 +364,7 @@ void loop()
   {
     if(CMD_CAT_VAL == 11){if(CMD_VAL_VAL == 1){M_EN = 1;}else{M_EN = 0;}}  // Master enable
     if(CMD_CAT_VAL == 12){if(CMD_VAL_VAL == 1){L_EN = 1;}else{L_EN = 0;}}  // Light enable
-    if(CMD_CAT_VAL == 13){if(CMD_VAL_VAL == 1){S_EN = 1;}else{S_EN = 1;}}  // Sound enable<---Change sound enable else S_EN=0 eventually
+    if(CMD_CAT_VAL == 13){if(CMD_VAL_VAL == 1){S_EN = 1;}else{S_EN = 0;}} // Sound enable<---Change sound enable else S_EN=0 eventually
     if(CMD_CAT_VAL == 14){if(CMD_VAL_VAL == 1){MO_EN = 1;}else{MO_EN = 0;}}  // Motion enable
     if(CMD_CAT_VAL == 15){if(CMD_VAL_VAL == 1){CL_EN = 1;}else{CL_EN = 0;}}  // Clock enable
     if(CMD_CAT_VAL == 16){if(CMD_VAL_VAL == 1){PIN_EN = 1;}else{PIN_EN = 0;}}  // Light Pinky  PIN flickerPin0
@@ -361,10 +373,10 @@ void loop()
     if(CMD_CAT_VAL == 19){if(CMD_VAL_VAL == 1){PAC_EN = 1;}else{PAC_EN = 0;}}  // Light PacMan PAC flickerPin3
     if(CMD_CAT_VAL == 20){if(CMD_VAL_VAL == 1){BLI_EN = 1;}else{BLI_EN = 0;}}  // Light Blinky BLI flickerPin4
     if(CMD_CAT_VAL == 21){if(CMD_VAL_VAL == 1){INK_EN = 1;}else{INK_EN = 0;}}  // Light Inky   INK flickerPin5
-    if(CMD_CAT_VAL == 22){if(CMD_VAL_VAL == 1){LS_EN = 1;}else{LS_EN = 0;}}    // LIGHT SENSOR enable
-    if(CMD_CAT_VAL == 23){}  // Light Enable
-    if(CMD_CAT_VAL == 24){}  // Light Sensor Trigger Value
-    if(CMD_CAT_VAL == 25){}  // Location (SF=1, Brkgs=2) (ip address)
+    if(CMD_CAT_VAL == 22){if(CMD_VAL_VAL == 1){LS_EN = !LS_EN;}}    // LIGHT SENSOR enable
+    if(CMD_CAT_VAL == 23){}  // Light Sensor Trigger Value
+    if(CMD_CAT_VAL == 24){}  // Night Light Enable
+    if(CMD_CAT_VAL == 25){}  // (ip address preset)
     if(CMD_CAT_VAL == 26){}  // Alarm Enable
     if(CMD_CAT_VAL == 27){}  // Alarm Date
     if(CMD_CAT_VAL == 28){}  // Alarm Time
@@ -405,31 +417,33 @@ void loop()
   //..........measure room brightness.................................................................................
   ROOM_LIGHT = analogRead(PHOTO_RESISTOR);
   if(ROOM_LIGHT < DARK_TRIGGER){ROOM_DARK = 1;}else{ROOM_DARK = 0;}
- 
+
   //..........check for motion at all sensors................................................................
-  /*
-  MOTION_DETECTED = digitalRead(MOTION_PIN);
-  if(MOTION_DETECTED == 1)
+  if(MO_EN == 1)
   {
-    MOTION_DETECTED_HOLD = 1;
-    MOTION_OFF_TIME = millis() + MOTION_LIGHT_DURATION;
+    MOTION_DETECTED = digitalRead(MOTION_PIN);
+    if(MOTION_DETECTED == 1){MOTION_TRIGGER_COUNTS = MOTION_TRIGGER_COUNTS + 2;}
   }
-  if(MOTION_OFF_TIME > millis()){MOTION_DETECTED_HOLD == 0;}else{MOTION_DETECTED_HOLD = 0; }
-  
-  //if(ROOM_DARK == 0){analogWrite(PINS_FOR_FLICKER[3],255);}else{analogWrite(PINS_FOR_FLICKER[3],0);}
-  if(MOTION_DETECTED_HOLD == 1){L_EN=1;}else{L_EN = 1;}
-  */  
-  //digitalWrite(13,CLY_EN);
-  digitalWrite(PINS_FOR_FLICKER[0], 1 * M_EN * L_EN * PIN_EN);
-  digitalWrite(PINS_FOR_FLICKER[1], 1 * M_EN * L_EN * CLY_EN);
-  digitalWrite(PINS_FOR_FLICKER[2], 1 * M_EN * L_EN * CHE_EN);
-  digitalWrite(PINS_FOR_FLICKER[3], 1 * M_EN * L_EN * PAC_EN);
-  digitalWrite(PINS_FOR_FLICKER[4], 1 * M_EN * L_EN * BLI_EN);   
-  digitalWrite(PINS_FOR_FLICKER[5], 1 * M_EN * L_EN * INK_EN); 
+  MOTION_TRIGGER_COUNTS = MOTION_TRIGGER_COUNTS - 1;
+  if(MOTION_TRIGGER_COUNTS <0){MOTION_TRIGGER_COUNTS = 0;}
+  if(MOTION_TRIGGER_COUNTS > 800){MOTION_TRIGGER_COUNTS = 800;}
+
+  if(MOTION_TRIGGER_COUNTS * MO_EN>  0){MO_EN_PIN=1;}else{MO_EN_PIN=1-MO_EN;}
+  if(MOTION_TRIGGER_COUNTS * MO_EN> 80){MO_EN_CLY=1;}else{MO_EN_CLY=1-MO_EN;}
+  if(MOTION_TRIGGER_COUNTS * MO_EN>160){MO_EN_CHE=1;}else{MO_EN_CHE=1-MO_EN;}
+  if(MOTION_TRIGGER_COUNTS * MO_EN>240){MO_EN_PAC=1;}else{MO_EN_PAC=1-MO_EN;}
+  if(MOTION_TRIGGER_COUNTS * MO_EN>320){MO_EN_BLI=1;}else{MO_EN_BLI=1-MO_EN;}
+  if(MOTION_TRIGGER_COUNTS * MO_EN>400){MO_EN_INK=1;}else{MO_EN_INK=1-MO_EN;}
+    
+  digitalWrite(PINS_FOR_FLICKER[0], 1 * MO_EN_PIN * L_EN * PIN_EN);
+  digitalWrite(PINS_FOR_FLICKER[1], 1 * MO_EN_CLY * L_EN * CLY_EN);
+  digitalWrite(PINS_FOR_FLICKER[2], 1 * MO_EN_CHE * L_EN * CHE_EN);
+  digitalWrite(PINS_FOR_FLICKER[3], 1 * MO_EN_PAC * L_EN * PAC_EN);
+  digitalWrite(PINS_FOR_FLICKER[4], 1 * MO_EN_BLI * L_EN * BLI_EN);   
+  digitalWrite(PINS_FOR_FLICKER[5], 1 * MO_EN_INK * L_EN * INK_EN); 
   
   delay(5);
 }
-
 
 
 void fade_out_one_LED(){
@@ -455,9 +469,9 @@ void fade_out_one_LED(){
     {
       analogWrite(PINS_FOR_FLICKER[random_LED],i);
     }
-    tone(13, i*3);
+    if(S_EN==1){tone(13, i*3);}
     delay(15);
-    noTone(13);
+    if(S_EN==1){noTone(13);}
     if((random_LED == 0) || (random_LED == 5)){digitalWrite(PINS_FOR_FLICKER[random_LED],state);}
   }  
   digitalWrite(PINS_FOR_FLICKER[random_LED],0);
@@ -479,14 +493,14 @@ void play_PacMan_intro_song(byte added_divider) {
       noteDuration *= 1.5; // increases the duration in half for dotted notes
     }
     // we only play the note for 90% of the duration, leaving 10% as a pause
-    tone(13, melody[thisNote], noteDuration * 0.9);
+    if(S_EN==1){tone(13, melody[thisNote], noteDuration * 0.9);}
     digitalWrite(PINS_FOR_FLICKER[notelights[thisNote]],HIGH);
     // Wait for the specified duration before playing the next note.
     delay(noteDuration/2);
     if((thisNote > 42) && thisNote < 2 * notes - 2){digitalWrite(PINS_FOR_FLICKER[notelights[thisNote]],LOW);}
     // stop the waveform generation before the next note.
     delay(noteDuration/2);
-    noTone(13);
+    if(S_EN==1){noTone(13);}
     digitalWrite(PINS_FOR_FLICKER[notelights[thisNote]],LOW);
   //---end PLAY PACMAN INTRO SONG
   }
@@ -508,7 +522,7 @@ void play_MsPacMan_intro_song(byte added_divider) {
       noteDuration *= 1.5; // increases the duration in half for dotted notes
     }
     // we only play the note for 90% of the duration, leaving 10% as a pause
-    tone(13, melody2[thisNote], noteDuration * 0.9);
+    if(S_EN==1){tone(13, melody2[thisNote], noteDuration * 0.9);}
     if(notelights2[thisNote] < 6){digitalWrite(PINS_FOR_FLICKER[notelights2[thisNote]],HIGH);} else
     {
       if((thisNote == 42) || (thisNote == 46)){all_lights_on();}        
@@ -516,7 +530,7 @@ void play_MsPacMan_intro_song(byte added_divider) {
     }    
     // Wait for the specified duration before playing the next note.
     delay(noteDuration);
-    noTone(13);
+    if(S_EN==1){noTone(13);}
     for(int i=0; i<6; i+=1){digitalWrite(PINS_FOR_FLICKER[i],LOW);}
   //---end PLAY MsPACMAN INTRO SONG
   }
@@ -526,72 +540,46 @@ void play_MsPacMan_intro_song(byte added_divider) {
 void play_Staying_Alive_song(byte added_divider) 
 {
   all_lights_off();
-  byte set = 44; 
-  Most_staying_alive_notes(added_divider, set);
-  set = 42;
+  byte set = 42;
   Most_staying_alive_notes(added_divider, set);
   //two long notes
   all_lights_off();
   byte BRIGHT[6];
-  for (int i = 2*NOTE_GS4; i<2*NOTE_AS4; i+=2)  //415 to 466, 830 932
+  for (int i = 2*NOTE_GS4; i<2*NOTE_AS4; i+=2)
   {
-    //BRIGHT[5] = 100 + 154 * (i-830)/102;
-    tone(13, i/2, 8); delay(5);
-    //analogWrite(PINS_FOR_FLICKER[0], BRIGHT[5]);
-    //analogWrite(PINS_FOR_FLICKER[1], BRIGHT[5]);
-    //analogWrite(PINS_FOR_FLICKER[2], BRIGHT[5]);
-    //analogWrite(PINS_FOR_FLICKER[3], BRIGHT[5]);
-    //analogWrite(PINS_FOR_FLICKER[4], BRIGHT[5]);
-    //analogWrite(PINS_FOR_FLICKER[5], BRIGHT[5]);
-    long temp = (i-54) % 25;/*
-    if(temp == 0)
-    {
-      if(BRIGHT[0]==255)
-      {
-        BRIGHT[0]=255;
-        BRIGHT[5]=255;
-      }
-      else
-      {
-        BRIGHT[0]=0;
-        BRIGHT[5]=0;
-      }
-    }*/
+    if(S_EN==1){tone(13, i/2, 8); delay(5);}
+    long temp = (i-54) % 25;
   }
-  tone(13,NOTE_AS4,5000);
-
-  short int trigger = 500;
+  if(S_EN==1){tone(13,NOTE_AS4,6500);}
+  short int trigger = 800;
   short int main_counter;    // for change in tempo of strobe
-  short int counter_shutoff; // for strobe effect (shutoff)
+  short int counter_shutoff = 780; // for strobe effect (shutoff)
   bool shutoff = 1;
   for (int i = 0; i<3000; i=i+10)
   {
+    int temp2 = 2000;
     delay(10);
-    BRIGHT[1]=pow((2000-(pow(pow(2000-i,2),.5))),0.8)*255/pow(2000,0.8);
-    BRIGHT[2]=pow((2000-(pow(pow(2000-i,2),.5))),2.2)*255/pow(2000,2.2);
-    BRIGHT[3]=pow((2000-(pow(pow(2000-i,2),.5))),3.4)*255/pow(2000,3.4);
-    BRIGHT[4]=pow((2000-(pow(pow(2000-i,2),.5))),4.6)*255/pow(2000,4.6);
-
+    if(i<1800)
+    {
+      BRIGHT[1]=pow((2000-(pow(pow(temp2-i,2),.5))),0.8)*255/pow(temp2,0.8);
+      BRIGHT[2]=pow((2000-(pow(pow(temp2-i,2),.5))),2.2)*255/pow(temp2,2.2);
+      BRIGHT[3]=pow((2000-(pow(pow(temp2-i,2),.5))),3.4)*255/pow(temp2,3.4);
+      BRIGHT[4]=pow((2000-(pow(pow(temp2-i,2),.5))),4.6)*255/pow(temp2,4.6);
+    }
+    else
+    {
+      BRIGHT[4]=BRIGHT[4]*.98;
+      BRIGHT[3]=BRIGHT[3]*.94;
+      BRIGHT[2]=BRIGHT[2]*.90;
+      BRIGHT[1]=BRIGHT[1]*.88;
+    }
     main_counter += 10;
     counter_shutoff +=10;  
-    if((trigger == 500) && (i >= 1500)){trigger = 250; main_counter = 0;}
+    if((trigger == 800) && (i >= 1500)){trigger = 500; main_counter = 0;}
     if(counter_shutoff > 50){shutoff = 0;}
     if(counter_shutoff > trigger){counter_shutoff = 0; shutoff = 1;}
-    if((trigger == 125) && ((counter_shutoff - 5) % 125 == 0)){counter_shutoff = 0; shutoff = 1;}
-    /*if(main_counter >= trigger)
-    {
-      if(BRIGHT[0]==255)
-      {
-        BRIGHT[0]=255;
-        BRIGHT[5]=255;
-      }
-      else
-      {
-        BRIGHT[0]=0;
-        BRIGHT[5]=0;
-      }
-      main_counter = 0;
-    }*/
+    if((trigger == 500) && (counter_shutoff % 450 == 0)){counter_shutoff = 0; shutoff = 1;}
+
     digitalWrite(PINS_FOR_FLICKER[0], shutoff);
     analogWrite(PINS_FOR_FLICKER[1], BRIGHT[1]);
     analogWrite(PINS_FOR_FLICKER[2], BRIGHT[2]);
@@ -619,14 +607,14 @@ void Most_staying_alive_notes(byte added_divider, byte set) {
       noteDuration *= 1.5; // increases the duration in half for dotted notes
     }
     // we only play the note for 90% of the duration, leaving 10% as a pause
-    tone(13, melody3[thisNote], noteDuration*.9);
+    if(S_EN==1){tone(13, melody3[thisNote], noteDuration*.9);}
     digitalWrite(PINS_FOR_FLICKER[notelights3[thisNote]],HIGH);
     // Wait for the specified duration before playing the next note.
     delay(noteDuration/2);
     if((thisNote > 42) && thisNote < 2 * notes - 2){digitalWrite(PINS_FOR_FLICKER[notelights3[thisNote]],LOW);}
     // stop the waveform generation before the next note.
     delay(noteDuration/2);
-    noTone(13);
+    if(S_EN==1){noTone(13);}
     digitalWrite(PINS_FOR_FLICKER[notelights3[thisNote]],LOW);
     
   //---end PLAY PACMAN INTRO SONG

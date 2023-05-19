@@ -22,12 +22,12 @@
 
 #include <WiFi.h>
 
-char ssid[] = "007";    // your network SSID (name)
-char pass[] = "skyfall1";       // your network password
-//int keyIndex = 0;               // your network key Index number (needed only for WEP)
-//const char* ssid     = "DaveCave";
-//const char* password = "ladytheresabasketballinmypudding";
-//int keyIndex = 0;               // your network key Index number (needed only for WEP)
+char ssid1[] = "DaveCave";
+char pass1[] = "ladytheresabasketballinmypudding";
+//int keyIndex1 = 0;        // your network key Index number (needed only for WEP)
+char ssid2[] = "007";       // second network SSID (name)
+char pass2[] = "skyfall1";  // second network password
+//int keyIndex2 = 0;        // your network key Index number (needed only for WEP)
 
 byte status = WL_IDLE_STATUS;
 
@@ -101,10 +101,27 @@ void setup()
 
   while (status != WL_CONNECTED)  // attempt to connect to Wifi network:
   {
-    //DEBUGSerial.print("Attempting to connect to SSID: ");
-    //DEBUGSerial.println(ssid);
-    status = WiFi.begin(ssid, pass);    // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
-    delay(10000);    // wait 10 seconds for connection:
+    //DEBUG Serial.println("Attempting to connect to SSID: ");
+    //DEBUG Serial.println(ssid1);
+    status = WiFi.begin(ssid1, pass1);    // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
+    delay(5000);    // wait 5 seconds for connection:
+    if(status == WL_CONNECTED)
+    {
+      //DEBUG Serial.println("");
+      //DEBUG Serial.println(".....................successfully connected to first network.");
+      break;
+    }
+    //DEBUG Serial.println("..................failed to connect to 1st");
+    //DEBUG Serial.println("......................Attempting second network");
+    //DEBUG Serial.println(ssid2);
+    delay(1000);
+    status = WiFi.begin(ssid2, pass2);    // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
+    delay(5000);    // wait 5 seconds for connection:
+    if(status = WL_CONNECTED)
+    {
+      //DEBUG Serial.println("");
+      //DEBUG Serial.println(".............................connected to second");
+    }
   }
     
   digitalWrite(LED_B, LOW);

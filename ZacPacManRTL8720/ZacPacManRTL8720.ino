@@ -22,6 +22,8 @@
 
 #include <WiFi.h>
 
+int wifi_set_channel_plan(uint8_t channel_plan);
+
 char ssid1[] = "DaveCave";
 char pass1[] = "ladytheresabasketballinmypudding";
 //int keyIndex1 = 0;        // your network key Index number (needed only for WEP)
@@ -101,27 +103,28 @@ void setup()
 
   while (status != WL_CONNECTED)  // attempt to connect to Wifi network:
   {
-    //DEBUG Serial.println("Attempting to connect to SSID: ");
-    //DEBUG Serial.println(ssid1);
+    Serial.println("Attempting to connect to SSID: ");
+    Serial.println(ssid1);
     status = WiFi.begin(ssid1, pass1);    // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
     delay(5000);    // wait 5 seconds for connection:
     if(status == WL_CONNECTED)
     {
-      //DEBUG Serial.println("");
-      //DEBUG Serial.println(".....................successfully connected to first network.");
+      Serial.println("");
+      Serial.println(".....................successfully connected to first network.");
       break;
     }
-    //DEBUG Serial.println("..................failed to connect to 1st");
-    //DEBUG Serial.println("......................Attempting second network");
-    //DEBUG Serial.println(ssid2);
+    Serial.println("..................failed to connect to 1st");
+    Serial.println("......................Attempting second network");
+    Serial.println(ssid2);
     delay(1000);
     status = WiFi.begin(ssid2, pass2);    // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
     delay(5000);    // wait 5 seconds for connection:
     if(status = WL_CONNECTED)
     {
-      //DEBUG Serial.println("");
-      //DEBUG Serial.println(".............................connected to second");
+      Serial.println("");
+      Serial.println(".............................connected to second");
     }
+    
   }
     
   digitalWrite(LED_B, LOW);

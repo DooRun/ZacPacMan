@@ -115,18 +115,34 @@ int melody2[] = { NOTE_G4, 32, NOTE_A4, 32, NOTE_B4, 32, NOTE_C5,  8, NOTE_E5,  
                   NOTE_C6,  8, NOTE_B5,  8, NOTE_C6,  8}; // ms pacman
 
 int melody3[] = { NOTE_DS4,16, NOTE_F4, 16, REST,    16, NOTE_GS4, 16, REST,    8, NOTE_DS4, 8, REST,     8, NOTE_C4,  8, NOTE_AS3, 16, NOTE_C4, 16, NOTE_DS4, 8,
-                  NOTE_AS3,16, NOTE_C4, 16, REST,    16, NOTE_DS4, 16, REST,   16, NOTE_A3, 16, NOTE_AS3, 8, NOTE_C4,  8, NOTE_DS4,  8, NOTE_F4,  8, NOTE_GS4, 8};// staying alive
+                  NOTE_AS3,16, NOTE_C4, 16, REST,    16, NOTE_DS4, 16, REST,   16, NOTE_A3, 16, NOTE_AS3, 8, NOTE_C4,  8, NOTE_DS4,  8, NOTE_F4,  8, NOTE_GS4, 8}; // staying alive
+
+int melody4[] = { NOTE_GS5, 2, // trill
+                  NOTE_E5,  16, NOTE_FS5, 16, NOTE_GS5,  2, NOTE_CS5, 2, 
+                  NOTE_CS6, 102, NOTE_CS6, 4,  NOTE_B5, 8, NOTE_CS6, 8, NOTE_B5,  8, NOTE_A5,  8, NOTE_A5,  2, REST,    2,
+                  NOTE_GS5, 2, NOTE_DS5, 2, NOTE_E5, 2, NOTE_FS5, 4, NOTE_CS5, 4,
+                  NOTE_CS5, 16, NOTE_DS5, 16, // trill
+                  REST,    8,  NOTE_CS5, 8, NOTE_DS5, 2, REST, 4,
+                  NOTE_GS4, 4, NOTE_GS5, 2, 
+                  NOTE_E5, 16, NOTE_FS5, 16, NOTE_GS5, 16, NOTE_A5, 16, NOTE_GS5, -4, NOTE_CS5, 4, NOTE_CS6, 4,
+                  NOTE_CS7, 8, NOTE_D7,  8, NOTE_B6,  8, NOTE_A6,  8, NOTE_GS6, 8, NOTE_FS6, 8,
+                  NOTE_E6, 16, NOTE_D6, 16, NOTE_CS6,16, NOTE_B4, 16, NOTE_A4, 16, NOTE_GS4,16, NOTE_FS4,16, NOTE_F4,16, NOTE_DS4,16, NOTE_CS4,16, NOTE_B3,16,
+                  NOTE_A3, -2, REST,     4, NOTE_E3,  2, NOTE_D5, -4, NOTE_CS5, 8, //trill
+                  NOTE_A4, 8, NOTE_B4, 32, NOTE_C5, 32, NOTE_CS5,32, NOTE_DS5,32, NOTE_E5,  4, NOTE_DS5, 8, NOTE_CS5, 8, NOTE_GS4,8, REST, 8, NOTE_A4, 2, NOTE_GS4, 4,NOTE_CS4, 1}; // Chopin Nocturne in C sharp Minor
                   
 // sizeof gives the number of bytes, each int value is composed of two bytes (16 bits)
 // there are two values per note (pitch and duration), so for each note there are four bytes
 int notes = sizeof(melody) / sizeof(melody[0]) / 2;
 int notes2 = sizeof(melody2) / sizeof(melody2[0]) / 2;
 int notes3 = sizeof(melody3) / sizeof(melody3[0]) / 2;
+int notes4 = sizeof(melody4) / sizeof(melody4[0]) / 2;
 byte notelights[62] = {0,0, 4,4, 2,2, 0,0 , 4,4, 2,2, 0,0, 1,1, 5,5, 3,3, 1,1, 5,5, 3,3, 1,1, 0,0, 4,4 ,2,2, 0,0, 4,4, 2,2, 0,0, 0,0, 1,1, 1,1, 2,2, 2,2, 3,3, 3,3, 4,4, 4,4, 5,5};
 byte notelights2[48] = {0,0, 1,1, 2,2, 0,0, 2,2, 1,1, 3,3, 2,2, 3,3, 4,4, 3,3, 2,2, 4,4, 0,0, 1,1, 2,2, 1,1, 2,2, 3,3, 4,4, 5,5, 7,7, 6,6, 7,7};
 byte notelights3[44] = {3,3, 4,4, 6,6, 5,5, 6,6, 3,3, 6,6, 2,2, 1,1, 2,2, 3,3, 1,1, 2,2, 6,6, 3,3, 6,6, 0,0, 1,1, 2,2, 3,3, 4,4, 5,5};
-// this calculates the duration of a whole note in ms
-int wholenote = (60000 * 4) / tempo;
+byte notelights4[136] = {3,3,0,0,1,1,2,2,0,0,5,5,5,5,4,4,5,5,4,4,3,3,3,3,6,6,5,5,2,2,3,3,4,4,2,2,2,2,3,3,3,3,6,6,2,2,3,3,
+                         1,1,4,4,3,3,2,2,3,3,4,4,5,5,4,4,2,2,  3,3,4,4,5,5,4,4,3,3,2,2,1,1,0,0,5,5,4,4,3,3,2,2,1,1,0,0,5,5,4,4,3,3,2,2,1,1,6,6,
+                         0,0,3,3,2,2,  0,0,1,1,2,2,3,3,4,4,5,5,4,4,3,3,2,2,3,3,2,2,0,0};
+int wholenote = (60000 * 4) / tempo;  // this calculates the duration of a whole note in ms
 int divider = 0, noteDuration = 0;
 //----- end PACMAN AND MS PACMAN SONG INFO
 
@@ -138,7 +154,6 @@ bool MOTION_DETECTED;
 bool MOTION_DETECTED_HOLD;
 const int MOTION_LIGHT_DURATION = 2000;    // duration of shelf lit after motion detected.
 unsigned long MOTION_OFF_TIME;
-
 bool MO_EN_PIN = 1;
 bool MO_EN_CLY = 1;
 bool MO_EN_CHE = 1;
@@ -201,18 +216,12 @@ String CMD_CAT_STRING;  // <== command_category_string
 int CMD_CAT_VAL;        // <== command_category_value
 String CMD_VAL_STRING;  // <== command_value_string
 int CMD_VAL_VAL;        // <== command_value_value
-
 int CMD_VAL_LENGTH[99];
-
-//----- Message and other variables -----//
 short data_count;                    // counter for number of characters stored or printed.
 unsigned char c;                   // char read by client from server http reply
 unsigned char data_line [601];     // this will be an array holding the invidiually read data points in ASCII value.
 int ZPMZ_end;  // This is the first position in the data_line array after ZPMZ has been found.
 bool break_out = 0;  // used to exit several nested loops once all important part of message is received externally from serial buffer.
-
-
-
 //----- end COMMUNICATIONS RELATED
 
 FlickerController flicker_controller(PINS_FOR_FLICKER, NUMBER_OF_FLICKER_PINS);  //---Nick's program for flickering LEDs as if short circuiting.
@@ -226,8 +235,6 @@ void setup() {
   pinMode(PHOTO_RESISTOR, INPUT);
   pinMode(MOTION_PIN, INPUT);
   flicker_controller.setup_controller();
-  //play_Staying_Alive_song(4);
-  //Startup_Sequence();
   CMD_VAL_LENGTH[11] = 1;  // Master enable
   CMD_VAL_LENGTH[12] = 1;  // Light enable
   CMD_VAL_LENGTH[13] = 1;  // Sound enable
@@ -249,6 +256,7 @@ void setup() {
   CMD_VAL_LENGTH[29] = 2;  // Performance number
 
   all_lights_on(); 
+  Play_Chopin(3);
 }
 
 void loop() 
@@ -388,25 +396,24 @@ void loop()
   
   delay(1);
   //-----PLAY SELECTED PERFORMANCE-----//
-  //if((CMD_CAT_VAL == 11) && (CMD_VAL_VAL ==1)){play_PacMan_intro_song(3); PERF_NUM = 0;CMD_CAT_VAL=0;}
   if(CMD_CAT_VAL = 29)
   {
-    if(PERF_NUM == 71){play_PacMan_intro_song(3);    PERF_NUM = 0;}
-    if(PERF_NUM == 72){play_MsPacMan_intro_song(3);  PERF_NUM = 0;}
-    if(PERF_NUM == 73){play_Staying_Alive_song(4);   PERF_NUM = 0;}
-    if(PERF_NUM == 74)
+    if((PERF_NUM == 71) && (M_EN == 1)){play_PacMan_intro_song(3);    PERF_NUM = 0;}
+    if((PERF_NUM == 72) && (M_EN == 1)){play_MsPacMan_intro_song(3);  PERF_NUM = 0;}
+    if((PERF_NUM == 73) && (M_EN == 1)){play_Staying_Alive_song(4);   PERF_NUM = 0;}
+    if((PERF_NUM == 74) && (M_EN == 1))
     {
       all_lights_off();
       flicker_controller.do_flicker(true);
       PERF_NUM = 0;
     }
-    if(PERF_NUM == 75)
+    if((PERF_NUM == 75) && (M_EN == 1))
     {
       all_lights_on(); 
       flicker_controller.do_flicker(false);
       PERF_NUM = 0;
     }
-    if(PERF_NUM == 76){Startup_Sequence(); PERF_NUM = 0;}  //<--not in android studio yet and need to refine here first.
+    if((PERF_NUM == 76) && (M_EN == 1)){Play_All(); PERF_NUM = 0;}  //<--not in android studio yet and need to refine here first.
   }
   //-----end PLAY SELECTED PERFORMANCE
   
@@ -422,18 +429,18 @@ void loop()
   if(MO_EN == 1)
   {
     MOTION_DETECTED = digitalRead(MOTION_PIN);
-    if(MOTION_DETECTED == 1){MOTION_TRIGGER_COUNTS = MOTION_TRIGGER_COUNTS + 3;}else{MOTION_TRIGGER_COUNTS = MOTION_TRIGGER_COUNTS - 1;}
+    if(MOTION_DETECTED == 1){MOTION_TRIGGER_COUNTS = MOTION_TRIGGER_COUNTS + 5;}
   }
-  
+  MOTION_TRIGGER_COUNTS = MOTION_TRIGGER_COUNTS - 1;
   if(MOTION_TRIGGER_COUNTS <0){MOTION_TRIGGER_COUNTS = 0;}
-  if(MOTION_TRIGGER_COUNTS > 800){MOTION_TRIGGER_COUNTS = 800;}
+  if(MOTION_TRIGGER_COUNTS > 3000){MOTION_TRIGGER_COUNTS = 3000;}
 
-  if(MOTION_TRIGGER_COUNTS * MO_EN>  0){MO_EN_PIN=1;}else{MO_EN_PIN=1-MO_EN;}
-  if(MOTION_TRIGGER_COUNTS * MO_EN> 80){MO_EN_CLY=1;}else{MO_EN_CLY=1-MO_EN;}
-  if(MOTION_TRIGGER_COUNTS * MO_EN>160){MO_EN_CHE=1;}else{MO_EN_CHE=1-MO_EN;}
-  if(MOTION_TRIGGER_COUNTS * MO_EN>240){MO_EN_PAC=1;}else{MO_EN_PAC=1-MO_EN;}
-  if(MOTION_TRIGGER_COUNTS * MO_EN>320){MO_EN_BLI=1;}else{MO_EN_BLI=1-MO_EN;}
-  if(MOTION_TRIGGER_COUNTS * MO_EN>400){MO_EN_INK=1;}else{MO_EN_INK=1-MO_EN;}
+  if(MOTION_TRIGGER_COUNTS * MO_EN>   0){MO_EN_PIN=1;}else{MO_EN_PIN=1-MO_EN;}
+  if(MOTION_TRIGGER_COUNTS * MO_EN> 400){MO_EN_CLY=1;}else{MO_EN_CLY=1-MO_EN;}
+  if(MOTION_TRIGGER_COUNTS * MO_EN> 800){MO_EN_CHE=1;}else{MO_EN_CHE=1-MO_EN;}
+  if(MOTION_TRIGGER_COUNTS * MO_EN>1200){MO_EN_PAC=1;}else{MO_EN_PAC=1-MO_EN;}
+  if(MOTION_TRIGGER_COUNTS * MO_EN>1600){MO_EN_BLI=1;}else{MO_EN_BLI=1-MO_EN;}
+  if(MOTION_TRIGGER_COUNTS * MO_EN>2000){MO_EN_INK=1;}else{MO_EN_INK=1-MO_EN;}
     
   digitalWrite(PINS_FOR_FLICKER[0], 1 * MO_EN_PIN * L_EN * PIN_EN);
   digitalWrite(PINS_FOR_FLICKER[1], 1 * MO_EN_CLY * L_EN * CLY_EN);
@@ -536,7 +543,6 @@ void play_MsPacMan_intro_song(byte added_divider) {
   }
 }
 
-
 void play_Staying_Alive_song(byte added_divider) 
 {
   all_lights_off();
@@ -621,7 +627,110 @@ void Most_staying_alive_notes(byte added_divider, byte set) {
   }
 }
 
-void Startup_Sequence()
+void Play_Chopin(byte added_divider)
+{
+  all_lights_off();
+  delay(2000);
+  // Remember, the array is twice the number of notes (notes + durations)
+  for (int thisNote4 = 0; thisNote4 < notes4 * 2; thisNote4 = thisNote4 + 2) 
+  {
+    // Articulation helps create space between notes, if appropriate
+    double articulation = 0.9;
+    // calculates the duration of each note
+    divider = melody4[thisNote4 + 1];
+    if (divider > 100) {
+      articulation = 1.1;
+      divider -= 100;
+    }
+
+    if (divider > 0) {
+      // regular note, just proceed
+      noteDuration = (wholenote) / divider / added_divider;
+    } else if (divider < 0) {
+      // dotted notes are represented with negative durations!!
+      noteDuration = (wholenote) / abs(divider) / added_divider;
+      noteDuration *= 1.5; // increases the duration in half for dotted notes
+    }
+
+    // we only play the note for 90% of the duration, leaving 10% as a pause
+    if(S_EN==1){tone(13, melody4[thisNote4], noteDuration * articulation);}
+    digitalWrite(PINS_FOR_FLICKER[notelights4[thisNote4]],HIGH);
+    /*
+    if(notelights2[thisNote] < 6){digitalWrite(PINS_FOR_FLICKER[notelights2[thisNote]],HIGH);} else
+    {
+      if((thisNote == 42) || (thisNote == 46)){all_lights_on();}        
+      if(thisNote > 42){digitalWrite(PINS_FOR_FLICKER[3], HIGH);}  
+    }*/
+    // Wait for the specified duration before playing the next note.
+    delay(noteDuration);
+    digitalWrite(PINS_FOR_FLICKER[notelights4[thisNote4]],LOW);
+    if((S_EN==1)&&(articulation !=1.1)){noTone(13);}
+
+    int trillDuration = wholenote / added_divider / 45;
+
+    //play trills if present...
+    if(thisNote4==0)//play 1ST trill
+    {
+      for (int i = 0; i<12; i=i+1)
+      {
+        tone(13, NOTE_FS5, trillDuration);
+        digitalWrite(PINS_FOR_FLICKER[1],HIGH);
+        delay(trillDuration);
+        digitalWrite(PINS_FOR_FLICKER[1],LOW);
+        tone(13, NOTE_GS5, trillDuration);
+        digitalWrite(PINS_FOR_FLICKER[2],HIGH);
+        delay(trillDuration);
+        digitalWrite(PINS_FOR_FLICKER[2],LOW);
+      }
+    }
+    if(thisNote4==36)//play 2ND trill
+    {      
+      for (int i = 0; i<16; i=i+1)
+      {
+        tone(13, NOTE_E5, trillDuration);
+        digitalWrite(PINS_FOR_FLICKER[1],HIGH);
+        delay(trillDuration);
+        digitalWrite(PINS_FOR_FLICKER[1],LOW);
+        tone(13, NOTE_DS5, trillDuration);
+        digitalWrite(PINS_FOR_FLICKER[2],HIGH);
+        delay(trillDuration);
+        digitalWrite(PINS_FOR_FLICKER[2],LOW);
+      }
+    }
+    if(thisNote4==50)//play 3RD trill
+    {
+      for (int i = 0; i<12; i=i+1)
+      {
+        tone(13, NOTE_FS5, trillDuration);
+        digitalWrite(PINS_FOR_FLICKER[1],HIGH);
+        delay(trillDuration);
+        digitalWrite(PINS_FOR_FLICKER[1],LOW);
+        tone(13, NOTE_GS5, trillDuration);
+        digitalWrite(PINS_FOR_FLICKER[2],HIGH);
+        delay(trillDuration);
+        digitalWrite(PINS_FOR_FLICKER[2],LOW);
+      }
+    }
+    if(thisNote4==110)//play 4TH trill
+    {
+      for (int i = 0; i<6; i=i+1)
+      {
+        tone(13, NOTE_B4, trillDuration);
+        digitalWrite(PINS_FOR_FLICKER[1],HIGH);
+        delay(trillDuration);
+        digitalWrite(PINS_FOR_FLICKER[1],LOW);
+        tone(13, NOTE_CS5, trillDuration);
+        digitalWrite(PINS_FOR_FLICKER[2],HIGH);
+        delay(trillDuration);
+        digitalWrite(PINS_FOR_FLICKER[2],LOW);
+      }
+    }
+    //for(int i=0; i<6; i+=1){digitalWrite(PINS_FOR_FLICKER[i],LOW);}
+  //---end PLAY MsPACMAN INTRO SONG
+  }
+}
+
+void Play_All()
 {
   flicker_controller.do_flicker(true);
   delay(2000);
@@ -632,6 +741,8 @@ void Startup_Sequence()
   play_PacMan_intro_song(3);
   delay(2000);
   play_MsPacMan_intro_song(3);
+  delay(2000);
+  play_Staying_Alive_song(4);
   delay(2000);
   // Now fade in PacMan
   byte j;

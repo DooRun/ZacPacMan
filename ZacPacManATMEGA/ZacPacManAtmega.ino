@@ -119,14 +119,14 @@ int melody3[] = { NOTE_DS4,16, NOTE_F4, 16, REST,    16, NOTE_GS4, 16, REST,    
 
 int melody4[] = { NOTE_GS5, 2, // trill
                   NOTE_E5,  16, NOTE_FS5, 16, NOTE_GS5,  2, NOTE_CS5, 2, 
-                  NOTE_CS6, 102, NOTE_CS6, 4,  NOTE_B5, 8, NOTE_CS6, 8, NOTE_B5,  8, NOTE_A5,  8, NOTE_A5,  2, REST,    2,
+                  NOTE_CS6, 102, NOTE_CS6, 4,  NOTE_B5, 8, NOTE_CS6, 8, NOTE_B5,  8, NOTE_A5,  16, NOTE_A5,  2, REST,    2,
                   NOTE_GS5, 2, NOTE_DS5, 2, NOTE_E5, 2, NOTE_FS5, 4, NOTE_CS5, 4,
                   NOTE_CS5, 16, NOTE_DS5, 16, // trill
                   REST,    8,  NOTE_CS5, 8, NOTE_DS5, 2, REST, 4,
                   NOTE_GS4, 4, NOTE_GS5, 2, 
                   NOTE_E5, 16, NOTE_FS5, 16, NOTE_GS5, 16, NOTE_A5, 16, NOTE_GS5, -4, NOTE_CS5, 4, NOTE_CS6, 4,
                   NOTE_CS7, 8, NOTE_D7,  8, NOTE_B6,  8, NOTE_A6,  8, NOTE_GS6, 8, NOTE_FS6, 8,
-                  NOTE_E6, 16, NOTE_D6, 16, NOTE_CS6,16, NOTE_B4, 16, NOTE_A4, 16, NOTE_GS4,16, NOTE_FS4,16, NOTE_F4,16, NOTE_DS4,16, NOTE_CS4,16, NOTE_B3,16,
+                  NOTE_F6, 16, NOTE_D6, 16, NOTE_CS6,16, NOTE_B4, 16, NOTE_A4, 16, NOTE_GS4,16, NOTE_FS4,16, NOTE_F4,16, NOTE_DS4,16, NOTE_CS4,16, NOTE_B3,16,
                   NOTE_A3, -2, REST,     4, NOTE_E3,  2, NOTE_D5, -4, NOTE_CS5, 8, //trill
                   NOTE_A4, 8, NOTE_B4, 32, NOTE_C5, 32, NOTE_CS5,32, NOTE_DS5,32, NOTE_E5,  4, NOTE_DS5, 8, NOTE_CS5, 8, NOTE_GS4,8, REST, 8, NOTE_A4, 2, NOTE_GS4, 4,NOTE_CS4, 1}; // Chopin Nocturne in C sharp Minor
                   
@@ -136,12 +136,14 @@ int notes = sizeof(melody) / sizeof(melody[0]) / 2;
 int notes2 = sizeof(melody2) / sizeof(melody2[0]) / 2;
 int notes3 = sizeof(melody3) / sizeof(melody3[0]) / 2;
 int notes4 = sizeof(melody4) / sizeof(melody4[0]) / 2;
-byte notelights[62] = {0,0, 4,4, 2,2, 0,0 , 4,4, 2,2, 0,0, 1,1, 5,5, 3,3, 1,1, 5,5, 3,3, 1,1, 0,0, 4,4 ,2,2, 0,0, 4,4, 2,2, 0,0, 0,0, 1,1, 1,1, 2,2, 2,2, 3,3, 3,3, 4,4, 4,4, 5,5};
-byte notelights2[48] = {0,0, 1,1, 2,2, 0,0, 2,2, 1,1, 3,3, 2,2, 3,3, 4,4, 3,3, 2,2, 4,4, 0,0, 1,1, 2,2, 1,1, 2,2, 3,3, 4,4, 5,5, 7,7, 6,6, 7,7};
-byte notelights3[44] = {3,3, 4,4, 6,6, 5,5, 6,6, 3,3, 6,6, 2,2, 1,1, 2,2, 3,3, 1,1, 2,2, 6,6, 3,3, 6,6, 0,0, 1,1, 2,2, 3,3, 4,4, 5,5};
-byte notelights4[136] = {3,3,0,0,1,1,2,2,0,0,5,5,5,5,4,4,5,5,4,4,3,3,3,3,6,6,5,5,2,2,3,3,4,4,2,2,2,2,3,3,3,3,6,6,2,2,3,3,
-                         1,1,4,4,3,3,2,2,3,3,4,4,5,5,4,4,2,2,  3,3,4,4,5,5,4,4,3,3,2,2,1,1,0,0,5,5,4,4,3,3,2,2,1,1,0,0,5,5,4,4,3,3,2,2,1,1,6,6,
-                         0,0,3,3,2,2,  0,0,1,1,2,2,3,3,4,4,5,5,4,4,3,3,2,2,3,3,2,2,0,0};
+//byte notelights[62] = {0,0, 4,4, 2,2, 0,0 , 4,4, 2,2, 0,0, 1,1, 5,5, 3,3, 1,1, 5,5, 3,3, 1,1, 0,0, 4,4 ,2,2, 0,0, 4,4, 2,2, 0,0, 0,0, 1,1, 1,1, 2,2, 2,2, 3,3, 3,3, 4,4, 4,4, 5,5};
+
+byte notelights[31] = {0,4,2,0,4,2,0,1,5,3,1,5,3,1,0,4,2,0,4,2,0,0,1,1,2,2,3,3,4,4,5};
+byte notelights2[24] = {0,1,2,0,2,1,3,2,3,4,3,2,4,0,1,2,1,2,3,4,5,7,6,7};
+byte notelights3[22] = {3,4,6,5,6,3,6,2,1,2,3,1,2,6,3,6,0,1,2,3,4,5};
+byte notelights4[66] = {4,  2,3,4,0,5,5,4,5,4,3,3,6,5,2,3,4,2,  2,3,6,1,3,2,0,1,2,3,4,3,0,3,4,4,5,4,3,2,1,5,4,3,2,1,0,5,4,3,2,1,0,0,3,2,  0,1,2,3,4,5,4,3,2,3,2,0};
+
+
 int wholenote = (60000 * 4) / tempo;  // this calculates the duration of a whole note in ms
 int divider = 0, noteDuration = 0;
 //----- end PACMAN AND MS PACMAN SONG INFO
@@ -255,8 +257,11 @@ void setup() {
   CMD_VAL_LENGTH[28] = 6;  // Alarm time
   CMD_VAL_LENGTH[29] = 2;  // Performance number
 
-  all_lights_on(); 
-  Play_Chopin(3);
+  all_lights_off(); 
+  //play_PacMan_intro_song(3);
+  //play_MsPacMan_intro_song(3);
+  //play_Stayin_Alive_song(3);
+  play_Chopin(3);
 }
 
 void loop() 
@@ -400,7 +405,7 @@ void loop()
   {
     if((PERF_NUM == 71) && (M_EN == 1)){play_PacMan_intro_song(3);    PERF_NUM = 0;}
     if((PERF_NUM == 72) && (M_EN == 1)){play_MsPacMan_intro_song(3);  PERF_NUM = 0;}
-    if((PERF_NUM == 73) && (M_EN == 1)){play_Staying_Alive_song(4);   PERF_NUM = 0;}
+    if((PERF_NUM == 73) && (M_EN == 1)){play_Stayin_Alive_song(4);   PERF_NUM = 0;}
     if((PERF_NUM == 74) && (M_EN == 1))
     {
       all_lights_off();
@@ -413,7 +418,8 @@ void loop()
       flicker_controller.do_flicker(false);
       PERF_NUM = 0;
     }
-    if((PERF_NUM == 76) && (M_EN == 1)){Play_All(); PERF_NUM = 0;}  //<--not in android studio yet and need to refine here first.
+    if((PERF_NUM == 76) && (M_EN == 1)){play_all(); PERF_NUM = 0;}  //<--not in android studio yet and need to refine here first.
+    if((PERF_NUM == 77) && (M_EN == 1)){play_Chopin(3); PERF_NUM = 0;}
   }
   //-----end PLAY SELECTED PERFORMANCE
   
@@ -500,15 +506,17 @@ void play_PacMan_intro_song(byte added_divider) {
       noteDuration *= 1.5; // increases the duration in half for dotted notes
     }
     // we only play the note for 90% of the duration, leaving 10% as a pause
+    digitalWrite(PINS_FOR_FLICKER[notelights[thisNote/2]],HIGH);
+    delay(3);
     if(S_EN==1){tone(13, melody[thisNote], noteDuration * 0.9);}
-    digitalWrite(PINS_FOR_FLICKER[notelights[thisNote]],HIGH);
     // Wait for the specified duration before playing the next note.
     delay(noteDuration/2);
-    if((thisNote > 42) && thisNote < 2 * notes - 2){digitalWrite(PINS_FOR_FLICKER[notelights[thisNote]],LOW);}
+    if((thisNote > 42) && thisNote < 2 * notes - 2){digitalWrite(PINS_FOR_FLICKER[notelights[thisNote/2]],LOW);}
     // stop the waveform generation before the next note.
     delay(noteDuration/2);
     if(S_EN==1){noTone(13);}
-    digitalWrite(PINS_FOR_FLICKER[notelights[thisNote]],LOW);
+    delay(3);
+    digitalWrite(PINS_FOR_FLICKER[notelights[thisNote/2]],LOW);
   //---end PLAY PACMAN INTRO SONG
   }
 }
@@ -530,7 +538,7 @@ void play_MsPacMan_intro_song(byte added_divider) {
     }
     // we only play the note for 90% of the duration, leaving 10% as a pause
     if(S_EN==1){tone(13, melody2[thisNote], noteDuration * 0.9);}
-    if(notelights2[thisNote] < 6){digitalWrite(PINS_FOR_FLICKER[notelights2[thisNote]],HIGH);} else
+    if(notelights2[thisNote/2] < 6){digitalWrite(PINS_FOR_FLICKER[notelights2[thisNote/2]],HIGH);} else
     {
       if((thisNote == 42) || (thisNote == 46)){all_lights_on();}        
       if(thisNote > 42){digitalWrite(PINS_FOR_FLICKER[3], HIGH);}  
@@ -543,7 +551,7 @@ void play_MsPacMan_intro_song(byte added_divider) {
   }
 }
 
-void play_Staying_Alive_song(byte added_divider) 
+void play_Stayin_Alive_song(byte added_divider) 
 {
   all_lights_off();
   byte set = 42;
@@ -614,20 +622,20 @@ void Most_staying_alive_notes(byte added_divider, byte set) {
     }
     // we only play the note for 90% of the duration, leaving 10% as a pause
     if(S_EN==1){tone(13, melody3[thisNote], noteDuration*.9);}
-    digitalWrite(PINS_FOR_FLICKER[notelights3[thisNote]],HIGH);
+    digitalWrite(PINS_FOR_FLICKER[notelights3[thisNote/2]],HIGH);
     // Wait for the specified duration before playing the next note.
     delay(noteDuration/2);
-    if((thisNote > 42) && thisNote < 2 * notes - 2){digitalWrite(PINS_FOR_FLICKER[notelights3[thisNote]],LOW);}
+    if((thisNote > 42) && thisNote < 2 * notes - 2){digitalWrite(PINS_FOR_FLICKER[notelights3[thisNote/2]],LOW);}
     // stop the waveform generation before the next note.
     delay(noteDuration/2);
     if(S_EN==1){noTone(13);}
-    digitalWrite(PINS_FOR_FLICKER[notelights3[thisNote]],LOW);
+    digitalWrite(PINS_FOR_FLICKER[notelights3[thisNote/2]],LOW);
     
   //---end PLAY PACMAN INTRO SONG
   }
 }
 
-void Play_Chopin(byte added_divider)
+void play_Chopin(byte added_divider)
 {
   all_lights_off();
   delay(2000);
@@ -635,7 +643,7 @@ void Play_Chopin(byte added_divider)
   for (int thisNote4 = 0; thisNote4 < notes4 * 2; thisNote4 = thisNote4 + 2) 
   {
     // Articulation helps create space between notes, if appropriate
-    double articulation = 0.9;
+    double articulation = 0.3;
     // calculates the duration of each note
     divider = melody4[thisNote4 + 1];
     if (divider > 100) {
@@ -653,20 +661,14 @@ void Play_Chopin(byte added_divider)
     }
 
     // we only play the note for 90% of the duration, leaving 10% as a pause
+    digitalWrite(PINS_FOR_FLICKER[notelights4[thisNote4/2]],HIGH);
     if(S_EN==1){tone(13, melody4[thisNote4], noteDuration * articulation);}
-    digitalWrite(PINS_FOR_FLICKER[notelights4[thisNote4]],HIGH);
-    /*
-    if(notelights2[thisNote] < 6){digitalWrite(PINS_FOR_FLICKER[notelights2[thisNote]],HIGH);} else
-    {
-      if((thisNote == 42) || (thisNote == 46)){all_lights_on();}        
-      if(thisNote > 42){digitalWrite(PINS_FOR_FLICKER[3], HIGH);}  
-    }*/
     // Wait for the specified duration before playing the next note.
     delay(noteDuration);
-    digitalWrite(PINS_FOR_FLICKER[notelights4[thisNote4]],LOW);
+    digitalWrite(PINS_FOR_FLICKER[notelights4[thisNote4/2]],LOW);
     if((S_EN==1)&&(articulation !=1.1)){noTone(13);}
 
-    int trillDuration = wholenote / added_divider / 45;
+    short int trillDuration = wholenote / added_divider / 45;
 
     //play trills if present...
     if(thisNote4==0)//play 1ST trill
@@ -688,13 +690,13 @@ void Play_Chopin(byte added_divider)
       for (int i = 0; i<16; i=i+1)
       {
         tone(13, NOTE_E5, trillDuration);
-        digitalWrite(PINS_FOR_FLICKER[1],HIGH);
-        delay(trillDuration);
-        digitalWrite(PINS_FOR_FLICKER[1],LOW);
-        tone(13, NOTE_DS5, trillDuration);
         digitalWrite(PINS_FOR_FLICKER[2],HIGH);
         delay(trillDuration);
         digitalWrite(PINS_FOR_FLICKER[2],LOW);
+        tone(13, NOTE_DS5, trillDuration);
+        digitalWrite(PINS_FOR_FLICKER[3],HIGH);
+        delay(trillDuration);
+        digitalWrite(PINS_FOR_FLICKER[3],LOW);
       }
     }
     if(thisNote4==50)//play 3RD trill
@@ -702,13 +704,13 @@ void Play_Chopin(byte added_divider)
       for (int i = 0; i<12; i=i+1)
       {
         tone(13, NOTE_FS5, trillDuration);
-        digitalWrite(PINS_FOR_FLICKER[1],HIGH);
-        delay(trillDuration);
-        digitalWrite(PINS_FOR_FLICKER[1],LOW);
-        tone(13, NOTE_GS5, trillDuration);
         digitalWrite(PINS_FOR_FLICKER[2],HIGH);
         delay(trillDuration);
         digitalWrite(PINS_FOR_FLICKER[2],LOW);
+        tone(13, NOTE_GS5, trillDuration);
+        digitalWrite(PINS_FOR_FLICKER[3],HIGH);
+        delay(trillDuration);
+        digitalWrite(PINS_FOR_FLICKER[3],LOW);
       }
     }
     if(thisNote4==110)//play 4TH trill
@@ -716,21 +718,21 @@ void Play_Chopin(byte added_divider)
       for (int i = 0; i<6; i=i+1)
       {
         tone(13, NOTE_B4, trillDuration);
+        digitalWrite(PINS_FOR_FLICKER[0],HIGH);
+        delay(trillDuration);
+        digitalWrite(PINS_FOR_FLICKER[0],LOW);
+        tone(13, NOTE_CS5, trillDuration);
         digitalWrite(PINS_FOR_FLICKER[1],HIGH);
         delay(trillDuration);
         digitalWrite(PINS_FOR_FLICKER[1],LOW);
-        tone(13, NOTE_CS5, trillDuration);
-        digitalWrite(PINS_FOR_FLICKER[2],HIGH);
-        delay(trillDuration);
-        digitalWrite(PINS_FOR_FLICKER[2],LOW);
       }
     }
     //for(int i=0; i<6; i+=1){digitalWrite(PINS_FOR_FLICKER[i],LOW);}
-  //---end PLAY MsPACMAN INTRO SONG
+  //---end PLAY CHOPIN SONG
   }
 }
 
-void Play_All()
+void play_all()
 {
   flicker_controller.do_flicker(true);
   delay(2000);
@@ -742,7 +744,9 @@ void Play_All()
   delay(2000);
   play_MsPacMan_intro_song(3);
   delay(2000);
-  play_Staying_Alive_song(4);
+  play_Stayin_Alive_song(4);
+  delay(2000);
+  play_Chopin(4);
   delay(2000);
   // Now fade in PacMan
   byte j;

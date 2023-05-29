@@ -209,7 +209,7 @@ byte TOGGLE;
   //  Arduino pin 1 to voltage divider then to ESP8266 RX
   //  Connect GND from the Arduiono to GND on the ESP8266
   //  Pull ESP8266 CH_PD HIGH
-SoftwareSerial mySerial(0,1);  // RX,TX  (7,8 FOR arduino board but NOT FOR ATMEGA CHIP!!! WHICH IS 0,1)
+SoftwareSerial mySerial(7,8);  // RX,TX  (7,8 FOR arduino board but NOT FOR ATMEGA CHIP!!! WHICH IS 0,1)
 long SERIAL_TIMEOUT = 350; // This is needed for serial read otherwise, may not read all the data.
 bool MESSAGE_RECEIVED;
 String MESSAGE_INCOMING = ""; 
@@ -261,7 +261,7 @@ void setup() {
   //play_PacMan_intro_song(3);
   //play_MsPacMan_intro_song(3);
   //play_Stayin_Alive_song(3);
-  play_Chopin(3);
+  //play_Chopin(3);
 }
 
 void loop() 
@@ -643,7 +643,7 @@ void play_Chopin(byte added_divider)
   for (int thisNote4 = 0; thisNote4 < notes4 * 2; thisNote4 = thisNote4 + 2) 
   {
     // Articulation helps create space between notes, if appropriate
-    double articulation = 0.3;
+    double articulation = 0.9;
     // calculates the duration of each note
     divider = melody4[thisNote4 + 1];
     if (divider > 100) {

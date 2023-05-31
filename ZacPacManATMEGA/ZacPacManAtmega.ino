@@ -209,7 +209,7 @@ byte TOGGLE;
   //  Arduino pin 1 to voltage divider then to ESP8266 RX
   //  Connect GND from the Arduiono to GND on the ESP8266
   //  Pull ESP8266 CH_PD HIGH
-SoftwareSerial mySerial(7,8);  // RX,TX  (7,8 FOR arduino board but NOT FOR ATMEGA CHIP!!! WHICH IS 0,1)
+SoftwareSerial mySerial(0,1);  // RX,TX  (7,8 FOR arduino board but NOT FOR ATMEGA CHIP!!! WHICH IS 0,1)
 long SERIAL_TIMEOUT = 350; // This is needed for serial read otherwise, may not read all the data.
 bool MESSAGE_RECEIVED;
 String MESSAGE_INCOMING = ""; 
@@ -262,10 +262,12 @@ void setup() {
   //play_MsPacMan_intro_song(3);
   //play_Stayin_Alive_song(3);
   //play_Chopin(3);
+  //flicker_controller.do_flicker(true);
 }
 
 void loop() 
 {
+  MasterEnableOffResumePosition:  // this goto label is to bypass the majority of the main loop after communication if the main power is shut off by Android app (master enable M_EN==0).
   //----- READ/STORE WANTED DATA FROM RTL8720DN_BW PLACED IN SERIAL BUFFER IF IT EXISTS -----//
   ZPMZ_end = 0;
   if(mySerial.available())
@@ -377,7 +379,7 @@ void loop()
   {
     if(CMD_CAT_VAL == 11){if(CMD_VAL_VAL == 1){M_EN = 1;}else{M_EN = 0;}}  // Master enable
     if(CMD_CAT_VAL == 12){if(CMD_VAL_VAL == 1){L_EN = 1;}else{L_EN = 0;}}  // Light enable
-    if(CMD_CAT_VAL == 13){if(CMD_VAL_VAL == 1){S_EN = 1;}else{S_EN = 0;}} // Sound enable<---Change sound enable else S_EN=0 eventually
+    if(CMD_CAT_VAL == 13){if(CMD_VAL_VAL == 1){S_EN = 0;}else{S_EN = 1;}} // Sound enable<---Change sound enable else S_EN=0 eventually
     if(CMD_CAT_VAL == 14){if(CMD_VAL_VAL == 1){MO_EN = 1;}else{MO_EN = 0;}}  // Motion enable
     if(CMD_CAT_VAL == 15){if(CMD_VAL_VAL == 1){CL_EN = 1;}else{CL_EN = 0;}}  // Clock enable
     if(CMD_CAT_VAL == 16){if(CMD_VAL_VAL == 1){PIN_EN = 1;}else{PIN_EN = 0;}}  // Light Pinky  PIN flickerPin0
@@ -398,13 +400,15 @@ void loop()
     MESSAGE_RECEIVED = false;
   }
   //---end UPDATE VARIABLES IF MESSAGE WAS RECEIVED  }
+  if(M_EN==0){all_lights_off();goto MasterEnableOffResumePosition;}
+
   
   delay(1);
   //-----PLAY SELECTED PERFORMANCE-----//
   if(CMD_CAT_VAL = 29)
   {
-    if((PERF_NUM == 71) && (M_EN == 1)){play_PacMan_intro_song(3);    PERF_NUM = 0;}
-    if((PERF_NUM == 72) && (M_EN == 1)){play_MsPacMan_intro_song(3);  PERF_NUM = 0;}
+    if((PERF_NUM == 71) && (M_EN == 1)){play_PacMan_intro_song(3);   PERF_NUM = 0;}
+    if((PERF_NUM == 72) && (M_EN == 1)){play_MsPacMan_intro_song(3); PERF_NUM = 0;}
     if((PERF_NUM == 73) && (M_EN == 1)){play_Stayin_Alive_song(4);   PERF_NUM = 0;}
     if((PERF_NUM == 74) && (M_EN == 1))
     {

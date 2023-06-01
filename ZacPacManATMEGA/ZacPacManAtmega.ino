@@ -379,7 +379,7 @@ void loop()
   {
     if(CMD_CAT_VAL == 11){if(CMD_VAL_VAL == 1){M_EN = 1;}else{M_EN = 0;}}  // Master enable
     if(CMD_CAT_VAL == 12){if(CMD_VAL_VAL == 1){L_EN = 1;}else{L_EN = 0;}}  // Light enable
-    if(CMD_CAT_VAL == 13){if(CMD_VAL_VAL == 1){S_EN = 0;}else{S_EN = 1;}} // Sound enable<---Change sound enable else S_EN=0 eventually
+    if(CMD_CAT_VAL == 13){if(CMD_VAL_VAL == 1){S_EN = 1;}else{S_EN = 0;}}  // Sound enable<---Change sound enable else S_EN=0 eventually
     if(CMD_CAT_VAL == 14){if(CMD_VAL_VAL == 1){MO_EN = 1;}else{MO_EN = 0;}}  // Motion enable
     if(CMD_CAT_VAL == 15){if(CMD_VAL_VAL == 1){CL_EN = 1;}else{CL_EN = 0;}}  // Clock enable
     if(CMD_CAT_VAL == 16){if(CMD_VAL_VAL == 1){PIN_EN = 1;}else{PIN_EN = 0;}}  // Light Pinky  PIN flickerPin0
@@ -389,7 +389,8 @@ void loop()
     if(CMD_CAT_VAL == 20){if(CMD_VAL_VAL == 1){BLI_EN = 1;}else{BLI_EN = 0;}}  // Light Blinky BLI flickerPin4
     if(CMD_CAT_VAL == 21){if(CMD_VAL_VAL == 1){INK_EN = 1;}else{INK_EN = 0;}}  // Light Inky   INK flickerPin5
     if(CMD_CAT_VAL == 22){if(CMD_VAL_VAL == 1){LS_EN = !LS_EN;}}    // LIGHT SENSOR enable
-    if(CMD_CAT_VAL == 23){}  // Light Sensor Trigger Value
+    if(CMD_CAT_VAL == 23){if(CMD_VAL_VAL == 100){PAC_EN = 0; CHE_EN=1;}}  // Light Sensor Trigger Value
+    if(CMD_CAT_VAL == 23){if(CMD_VAL_VAL == 500){PAC_EN = 1; CHE_EN=0;}}  // Light Sensor Trigger Value
     if(CMD_CAT_VAL == 24){}  // Night Light Enable
     if(CMD_CAT_VAL == 25){}  // (ip address preset)
     if(CMD_CAT_VAL == 26){}  // Alarm Enable

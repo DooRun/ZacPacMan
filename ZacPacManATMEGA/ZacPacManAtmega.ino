@@ -118,7 +118,7 @@ int melody3[] = { NOTE_DS4,16, NOTE_F4, 16, REST,    16, NOTE_GS4, 16, REST,    
                   NOTE_AS3,16, NOTE_C4, 16, REST,    16, NOTE_DS4, 16, REST,   16, NOTE_A3, 16, NOTE_AS3, 8, NOTE_C4,  8, NOTE_DS4,  8, NOTE_F4,  8, NOTE_GS4, 8}; // staying alive
 
 int melody4[] = { NOTE_GS5, 2, // trill
-                  NOTE_E5,  16, NOTE_FS5, 16, NOTE_GS5,  2, NOTE_CS5, 2, 
+                  NOTE_E5,  16, NOTE_FS5, 16, NOTE_GS5,  2, NOTE_CS5, 2} /*,
                   NOTE_CS6, 102, NOTE_CS6, 4,  NOTE_B5, 8, NOTE_CS6, 8, NOTE_B5,  8, NOTE_A5,  16, NOTE_A5,  2, REST,    2,
                   NOTE_GS5, 2, NOTE_DS5, 2, NOTE_E5, 2, NOTE_FS5, 4, NOTE_CS5, 4,
                   NOTE_CS5, 16, NOTE_DS5, 16, // trill
@@ -129,7 +129,7 @@ int melody4[] = { NOTE_GS5, 2, // trill
                   NOTE_F6, 16, NOTE_D6, 16, NOTE_CS6,16, NOTE_B4, 16, NOTE_A4, 16, NOTE_GS4,16, NOTE_FS4,16, NOTE_F4,16, NOTE_DS4,16, NOTE_CS4,16, NOTE_B3,16,
                   NOTE_A3, -2, REST,     4, NOTE_E3,  2, NOTE_D5, -4, NOTE_CS5, 8, //trill
                   NOTE_A4, 8, NOTE_B4, 32, NOTE_C5, 32, NOTE_CS5,32, NOTE_DS5,32, NOTE_E5,  4, NOTE_DS5, 8, NOTE_CS5, 8, NOTE_GS4,8, REST, 8, NOTE_A4, 2, NOTE_GS4, 4,NOTE_CS4, 1}; // Chopin Nocturne in C sharp Minor
-                  
+                  */  // Temporarily disabled most of this array as it is too big and causing performance problems.
 // sizeof gives the number of bytes, each int value is composed of two bytes (16 bits)
 // there are two values per note (pitch and duration), so for each note there are four bytes
 int notes = sizeof(melody) / sizeof(melody[0]) / 2;

@@ -22,13 +22,23 @@
 
 #include <WiFi.h>
 
-char ssid[] = "007";    // your network SSID (name)
-char pass[] = "skyfall1";       // your network password
-//int keyIndex = 0;               // your network key Index number (needed only for WEP)
-//const char* ssid     = "DaveCave";
-//const char* password = "ladytheresabasketballinmypudding";
-//int keyIndex = 0;               // your network key Index number (needed only for WEP)
+//---Brookings programming version below---
+int wifi_set_channel_plan(uint8_t channel_plan);
+char ssid1[] = "007";
+char pass1[] = "skyfall1";
+//int keyIndex1 = 0;        // your network key Index number (needed only for WEP)
+char ssid2[] = "007";       // second network SSID (name)
+char pass2[] = "skyfall1";  // second network password
+//int keyIndex2 = 0;        // your network key Index number (needed only for WEP)
 
+/*---final version below---*
+char ssid1[] = "DaveCave";
+char pass1[] = "ladytheresabasketballinmypudding";
+//int keyIndex1 = 0;        // your network key Index number (needed only for WEP)
+char ssid2[] = "007";       // second network SSID (name)
+char pass2[] = "skyfall1";  // second network password
+//int keyIndex2 = 0;        // your network key Index number (needed only for WEP)
+*/
 byte status = WL_IDLE_STATUS;
 
 WiFiServer server(80);
@@ -101,10 +111,28 @@ void setup()
 
   while (status != WL_CONNECTED)  // attempt to connect to Wifi network:
   {
-    //DEBUGSerial.print("Attempting to connect to SSID: ");
-    //DEBUGSerial.println(ssid);
-    status = WiFi.begin(ssid, pass);    // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
-    delay(10000);    // wait 10 seconds for connection:
+    Serial.println("Attempting to connect to SSID: ");
+    Serial.println(ssid1);
+    status = WiFi.begin(ssid1, pass1);    // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
+    delay(5000);    // wait 5 seconds for connection:
+    if(status == WL_CONNECTED)
+    {
+      Serial.println("");
+      Serial.println(".....................successfully connected to first network.");
+      break;
+    }
+    Serial.println("..................failed to connect to 1st");
+    Serial.println("......................Attempting second network");
+    Serial.println(ssid2);
+    delay(1000);
+    status = WiFi.begin(ssid2, pass2);    // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
+    delay(5000);    // wait 5 seconds for connection:
+    if(status = WL_CONNECTED)
+    {
+      Serial.println("");
+      Serial.println(".............................connected to second");
+    }
+    
   }
     
   digitalWrite(LED_B, LOW);
@@ -222,8 +250,8 @@ void loop()
     if (MESSAGE_TO_ATMEGA =="22:0x"){LS_EN_STATE = "LIGHT SENSOR OFF";}
     if (MESSAGE_TO_ATMEGA =="22:1x"){LS_EN_STATE = "LIGHT SENSOR ON ";}
 
-    if (M_EN_STATE == "MASTER OFF"){client.println("<p><a href=\"ZPMZ11:1x,\"><button class=\"button\">MASTER OFF</button></a></p>");}
-    if (M_EN_STATE == "MASTER ON "){client.println("<p><a href=\"ZPMZ11:0x,\"><button class=\"button button2\">MASTER ON </button></a></p>");}
+    if (M_EN_STATE == "MASTER OFF"){client.println("MASTER OFF");}
+    if (M_EN_STATE == "MASTER ON "){client.println("MASTER ON");}
     if (L_EN_STATE == "LIGHT OFF"){client.println("<p><a href=\"ZPMZ12:1x,\"><button class=\"button\">LIGHT OFF</button></a></p>");}
     if (L_EN_STATE == "LIGHT ON "){client.println("<p><a href=\"ZPMZ12:0x,\"><button class=\"button button2\">LIGHT ON </button></a></p>");}
     if (S_EN_STATE == "SOUND OFF"){client.println("<p><a href=\"ZPMZ13:1x,\"><button class=\"button\">SOUND OFF</button></a></p>");}

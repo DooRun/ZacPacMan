@@ -252,8 +252,8 @@ void loop()
 
     if (M_EN_STATE == "MASTER OFF"){client.println("MASTER OFF");}
     if (M_EN_STATE == "MASTER ON "){client.println("MASTER ON");}
-    if (L_EN_STATE == "LIGHT OFF"){client.println("<p><a href=\"ZPMZ12:1x,\"><button class=\"button\">LIGHT OFF</button></a></p>");}
-    if (L_EN_STATE == "LIGHT ON "){client.println("<p><a href=\"ZPMZ12:0x,\"><button class=\"button button2\">LIGHT ON </button></a></p>");}
+    if (L_EN_STATE == "LIGHT OFF"){client.println("LIGHT OFF");}
+    if (L_EN_STATE == "LIGHT ON "){client.println("LIGHT ON");}
     if (S_EN_STATE == "SOUND OFF"){client.println("<p><a href=\"ZPMZ13:1x,\"><button class=\"button\">SOUND OFF</button></a></p>");}
     if (S_EN_STATE == "SOUND ON "){client.println("<p><a href=\"ZPMZ13:0x,\"><button class=\"button button2\">SOUND ON </button></a></p>");}
     if (MO_EN_STATE == "MOTION OFF"){client.println("<p><a href=\"ZPMZ14:1x,\"><button class=\"button\">MOTION OFF</button></a></p>");}

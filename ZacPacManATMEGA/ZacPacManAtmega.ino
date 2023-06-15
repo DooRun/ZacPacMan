@@ -118,7 +118,7 @@ int melody3[] = { NOTE_DS4,16, NOTE_F4, 16, REST,    16, NOTE_GS4, 16, REST,    
                   NOTE_AS3,16, NOTE_C4, 16, REST,    16, NOTE_DS4, 16, REST,   16, NOTE_A3, 16, NOTE_AS3, 8, NOTE_C4,  8, NOTE_DS4,  8, NOTE_F4,  8, NOTE_GS4, 8}; // staying alive
 
 int melody4[] = { NOTE_GS5, 2, // trill
-                  NOTE_E5,  16, NOTE_FS5, 16, NOTE_GS5,  2, NOTE_CS5, 2} /*,
+                  NOTE_E5,  16, NOTE_FS5, 16, NOTE_GS5,  2, NOTE_CS5, 2}; /*,
                   NOTE_CS6, 102, NOTE_CS6, 4,  NOTE_B5, 8, NOTE_CS6, 8, NOTE_B5,  8, NOTE_A5,  16, NOTE_A5,  2, REST,    2,
                   NOTE_GS5, 2, NOTE_DS5, 2, NOTE_E5, 2, NOTE_FS5, 4, NOTE_CS5, 4,
                   NOTE_CS5, 16, NOTE_DS5, 16, // trill
@@ -377,29 +377,50 @@ void loop()
   //---UPDATE VARIABLES IF MESSAGE WAS RECEIVED---//
   if(MESSAGE_RECEIVED == true)  
   {
-    if(CMD_CAT_VAL == 11){if(CMD_VAL_VAL == 1){M_EN = 1;}else{M_EN = 0;}}  // Master enable
-    if(CMD_CAT_VAL == 12){if(CMD_VAL_VAL == 1){L_EN = 1;}else{L_EN = 0;}}  // Light enable
-    if(CMD_CAT_VAL == 13){if(CMD_VAL_VAL == 1){S_EN = 1;}else{S_EN = 0;}}  // Sound enable<---Change sound enable else S_EN=0 eventually
-    if(CMD_CAT_VAL == 14){if(CMD_VAL_VAL == 1){MO_EN = 1;}else{MO_EN = 0;}}  // Motion enable
-    if(CMD_CAT_VAL == 15){if(CMD_VAL_VAL == 1){CL_EN = 1;}else{CL_EN = 0;}}  // Clock enable
-    if(CMD_CAT_VAL == 16){if(CMD_VAL_VAL == 1){PIN_EN = 1;}else{PIN_EN = 0;}}  // Light Pinky  PIN flickerPin0
-    if(CMD_CAT_VAL == 17){if(CMD_VAL_VAL == 1){CLY_EN = 1;}else{CLY_EN = 0;}}  // Light Clyde  CLY flickerPin1
-    if(CMD_CAT_VAL == 18){if(CMD_VAL_VAL == 1){CHE_EN = 1;}else{CHE_EN = 0;}}  // Light Cherry CHE flickerPin2
-    if(CMD_CAT_VAL == 19){if(CMD_VAL_VAL == 1){PAC_EN = 1;}else{PAC_EN = 0;}}  // Light PacMan PAC flickerPin3
-    if(CMD_CAT_VAL == 20){if(CMD_VAL_VAL == 1){BLI_EN = 1;}else{BLI_EN = 0;}}  // Light Blinky BLI flickerPin4
-    if(CMD_CAT_VAL == 21){if(CMD_VAL_VAL == 1){INK_EN = 1;}else{INK_EN = 0;}}  // Light Inky   INK flickerPin5
-    if(CMD_CAT_VAL == 22){if(CMD_VAL_VAL == 1){LS_EN = !LS_EN;}}    // LIGHT SENSOR enable
-    if(CMD_CAT_VAL == 23){if(CMD_VAL_VAL == 100){PAC_EN = 0; CHE_EN=1;}}  // Light Sensor Trigger Value
-    if(CMD_CAT_VAL == 23){if(CMD_VAL_VAL == 500){PAC_EN = 1; CHE_EN=0;}}  // Light Sensor Trigger Value
-    if(CMD_CAT_VAL == 24){}  // Night Light Enable
-    if(CMD_CAT_VAL == 25){}  // (ip address preset)
-    if(CMD_CAT_VAL == 26){}  // Alarm Enable
-    if(CMD_CAT_VAL == 27){}  // Alarm Date
-    if(CMD_CAT_VAL == 28){}  // Alarm Time
-    if(CMD_CAT_VAL == 29){PERF_NUM = CMD_VAL_VAL;}      // Performance (song/light show)
-       
+    if(CMD_CAT_VAL == 11){if(CMD_VAL_VAL == 1){M_EN = 1;}else{M_EN = 0;}}  // 11:#,Master Enable,
+    if(CMD_CAT_VAL == 12){if(CMD_VAL_VAL == 1){L_EN = 1;}else{L_EN = 0;}}  // 12:#,Light Enable,
+    if(CMD_CAT_VAL == 13){if(CMD_VAL_VAL == 1){S_EN = 1;}else{S_EN = 0;}}  // 13:#,Sound Enable,
+    if(CMD_CAT_VAL == 14){if(CMD_VAL_VAL == 1){MO_EN = 1;}else{MO_EN = 0;}}  // 14:#,Motion Enable,
+    if(CMD_CAT_VAL == 15){if(CMD_VAL_VAL == 1){CL_EN = 1;}else{CL_EN = 0;}}  // 15:#,Clock Enable,
+    if(CMD_CAT_VAL == 16){if(CMD_VAL_VAL == 1){PIN_EN = 1;}else{PIN_EN = 0;}}  // 16:#,Light Pinky,
+    if(CMD_CAT_VAL == 17){if(CMD_VAL_VAL == 1){CLY_EN = 1;}else{CLY_EN = 0;}}  // 17:#,Light Clyde,
+    if(CMD_CAT_VAL == 18){if(CMD_VAL_VAL == 1){CHE_EN = 1;}else{CHE_EN = 0;}}  // 18:#,Light Cherry,
+    if(CMD_CAT_VAL == 19){if(CMD_VAL_VAL == 1){PAC_EN = 1;}else{PAC_EN = 0;}}  // 19:#,Light PacMan,
+    if(CMD_CAT_VAL == 20){if(CMD_VAL_VAL == 1){BLI_EN = 1;}else{BLI_EN = 0;}}  // 20:#,Light Blinky,
+    if(CMD_CAT_VAL == 21){if(CMD_VAL_VAL == 1){INK_EN = 1;}else{INK_EN = 0;}}  // 21:#,Light Inky,
+    if(CMD_CAT_VAL == 22){if(CMD_VAL_VAL == 1){LS_EN = !LS_EN;}}    // 22:#,Light Sensor Enable,
+    if(CMD_CAT_VAL == 23){}  // 23:####,Light Sensor trigger value,
+    if(CMD_CAT_VAL == 24){}  // 24:#,Night Light Enable and mode,
+    if(CMD_CAT_VAL == 25){}  // empty
+    if(CMD_CAT_VAL == 26){}  // 26:#,Alarm Enable,
+    if(CMD_CAT_VAL == 27){}  // 27:######,Alarm Date,
+    if(CMD_CAT_VAL == 28){}  // 28:######,Alarm Time,
+    if(CMD_CAT_VAL == 29){PERF_NUM = CMD_VAL_VAL;}      // 29:##,Performance number,
+    // saving numbers 30 through 40 for non game part of ZPM
+    // numbers 41 on are for stayin alive game   
+    if(CMD_CAT_VAL == 41){}  //   41:#,Stayin_Game_Status (0,1 = not,ingame),
+    if(CMD_CAT_VAL == 42){}  //   42:#,myCharNum (1, 2, 3, 4, 5, or 6),
+    if(CMD_CAT_VAL == 43){}  //   43:######,ActualName,
+    if(CMD_CAT_VAL == 44){}  //   44:###,BankAfterSpend,
+    if(CMD_CAT_VAL == 45){}  //   45:###,Attack_balance,
+    if(CMD_CAT_VAL == 46){}  //   46:9######,Attack_or_Donate (Pinky-Inky),
+    if(CMD_CAT_VAL == 47){}  //   47:9######,Will_or_No (Pinky-Inky),
+    if(CMD_CAT_VAL == 48){}  //   48:9######,Mirror_or_No (Pinky-Inky),
+    if(CMD_CAT_VAL == 49){}  //   49:###,Attack_or_Donate_Amnt Pinky,
+    if(CMD_CAT_VAL == 50){}  //   50:###,Attack_or_Donate_Amnt Clyde,
+    if(CMD_CAT_VAL == 51){}  //   51:###,Attack_or_Donate_Amnt Cherry,
+    if(CMD_CAT_VAL == 52){}  //   52:###,Attack_or_Donate_Amnt PacMan,
+    if(CMD_CAT_VAL == 53){}  //   53:###,Attack_or_Donate_Amnt Blinky,
+    if(CMD_CAT_VAL == 54){}  //   54:###,Attack_or_Donate_Amnt Inky,
+    if(CMD_CAT_VAL == 55){}  //   55:9######,Mirror_Balances_Pinky_Values
+    if(CMD_CAT_VAL == 56){}  //   56:9######,Mirror_Balances_Clyde_Values
+    if(CMD_CAT_VAL == 57){}  //   57:9######,Mirror_Balances_Cherry_Values
+    if(CMD_CAT_VAL == 58){}  //   58:9######,Mirror_Balances_Pacman_Values
+    if(CMD_CAT_VAL == 59){}  //   59:9######,Mirror_Balances_Blinky_Values
+    if(CMD_CAT_VAL == 60){}  //   60:9######,Mirror_Balances_Inky_Values
     MESSAGE_RECEIVED = false;
   }
+
   //---end UPDATE VARIABLES IF MESSAGE WAS RECEIVED  }
   if(M_EN==0){all_lights_off();goto MasterEnableOffResumePosition;}
 

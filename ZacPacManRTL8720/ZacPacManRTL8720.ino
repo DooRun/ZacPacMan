@@ -54,18 +54,45 @@ unsigned char c;                   // char read by client from server http reply
 short data_count;     // counter for number of characters stored or printed.
 bool break_out = 0;  // used to exit several nested loops once all important part of message is received externally from phone or website.
 
-String M_EN_STATE = "MASTER ON ";       // Master enable
-String S_EN_STATE = "SOUND ON ";        // Light enable
-String L_EN_STATE = "LIGHT ON ";        // Sound enable
-String MO_EN_STATE = "MOTION ON ";      // Motion enable
-String CL_EN_STATE = "CLOCK ON ";       // Clock enable
-String PIN_EN_STATE = "PINKY ON ";      // Light Pinky  PIN
-String CLY_EN_STATE = "CLYDE ON ";      // Light Clyde  CLY
-String CHE_EN_STATE = "CHERRY ON ";     // Light Cherry CHE
-String PAC_EN_STATE = "PACMAN ON ";     // Light PacMan PAC
-String BLI_EN_STATE = "BLINKY ON ";     // Light Blinky BLI
-String INK_EN_STATE = "INKY ON ";       // Light Inky   INK
-String LS_EN_STATE = "LIGHT SENSOR ON ";// LIGHT SENSOR enable
+int p; // p is starting position for sbustring functions
+int Master_Enable;
+int Light_Enable;
+int Sound_Enable;
+int Motion_Enable;
+int Clock_Enable;
+int Light_Pinky;
+int Light_Clyde;
+int Light_Cherry;
+int Light_PacMan;
+int Light_Blinky;
+int Light_Inky;
+int Light_Sensor_Enable;
+int Light_Sensor_trigger_value;
+int Night_Light_Enable_and_mode;
+int Alarm_Enable;
+String Alarm_Date;
+String Alarm_Time;
+int Performance_number;
+int Stayin_Game_Status;
+int myCharNum;
+String ActualName;
+int BankAfterSpend;
+int Attack_balance;
+long Attack_or_Donate_Flag;
+long Will_or_No;
+long Mirror_or_No;
+int Attack_or_Donate_Pinky_Amnt;
+int Attack_or_Donate_Clyde_Amnt;
+int Attack_or_Donate_Cherry_Amnt;
+int Attack_or_Donate_PacMan_Amnt;
+int Attack_or_Donate_Blinky_Amnt;
+int Attack_or_Donate_Inky_Amnt;
+int Mirror_Balances_Pinky_Values;
+int Mirror_Balances_Clyde_Values;
+int Mirror_Balances_Cherry_Values;
+int Mirror_Balances_Pacman_Values;
+int Mirror_Balances_Blinky_Values;
+int Mirror_Balances_Inky_Values;
 
 void setup() 
 {
@@ -80,21 +107,47 @@ void setup()
   Serial.begin(9600);
   for (int i = 0; i<99; i=i+1){MESSAGE_PART_LENGTH[i]=8;}
 
-  MESSAGE_PART_LENGTH[10] = 5; // Lambda, i.e., an unassigned message to send to do nothing but refresh webpage
-  MESSAGE_PART_LENGTH[11] = 5; // Master enable
-  MESSAGE_PART_LENGTH[12] = 5; // Light enable
-  MESSAGE_PART_LENGTH[13] = 5; // Sound enable
-  MESSAGE_PART_LENGTH[14] = 5; // Motion enable
-  MESSAGE_PART_LENGTH[15] = 5; // Clock enable
-  MESSAGE_PART_LENGTH[16] = 5; // Light Pinky  PIN
-  MESSAGE_PART_LENGTH[17] = 5; // Light Clyde  CLY
-  MESSAGE_PART_LENGTH[18] = 5; // Light Cherry CHE
-  MESSAGE_PART_LENGTH[19] = 5; // Light PacMan PAC
-  MESSAGE_PART_LENGTH[20] = 5; // Light Blinky BLI
-  MESSAGE_PART_LENGTH[21] = 5; // Light Inky   INK
-  MESSAGE_PART_LENGTH[22] = 5; // Light Sensor enable
-  MESSAGE_PART_LENGTH[23] = 8; // Light Sensor trigger value
-  MESSAGE_PART_LENGTH[24] = 6; // Performance number
+  MESSAGE_PART_LENGTH[10]= 5;  //Message Control.  10:0--reset all variables, 10:1--Stayin game setup mode, 10:2--in-game mode, reset only game variables.
+  MESSAGE_PART_LENGTH[11]= 5;  //Master Enable
+  MESSAGE_PART_LENGTH[12]= 5;  //Light Enable
+  MESSAGE_PART_LENGTH[13]= 5;  //Sound Enable
+  MESSAGE_PART_LENGTH[14]= 5;  //Motion Enable
+  MESSAGE_PART_LENGTH[15]= 5;  //Clock Enable
+  MESSAGE_PART_LENGTH[16]= 5;  //Light Pinky
+  MESSAGE_PART_LENGTH[17]= 5;  //Light Clyde
+  MESSAGE_PART_LENGTH[18]= 5;  //Light Cherry
+  MESSAGE_PART_LENGTH[19]= 5;  //Light PacMan
+  MESSAGE_PART_LENGTH[20]= 5;  //Light Blinky
+  MESSAGE_PART_LENGTH[21]= 5;  //Light Inky
+  MESSAGE_PART_LENGTH[22]= 5;  //Light Sensor Enable
+  MESSAGE_PART_LENGTH[23]= 9;  //Light Sensor trigger value
+  MESSAGE_PART_LENGTH[24]= 5;  //Night Light Enable and mode
+  MESSAGE_PART_LENGTH[25]= 5;  //(ip address preset)
+  MESSAGE_PART_LENGTH[26]= 5;  //Alarm Enable
+  MESSAGE_PART_LENGTH[27]= 11;  //Alarm Date
+  MESSAGE_PART_LENGTH[28]= 11;  //Alarm Time
+  MESSAGE_PART_LENGTH[29]= 6;  //Performance number
+  MESSAGE_PART_LENGTH[41]= 5;  //Stayin_Game_Status (0,1 = not,ingame)
+  MESSAGE_PART_LENGTH[42]= 5;  //myCharNum (1, 2, 3, 4, 5, or 6)
+  MESSAGE_PART_LENGTH[43]= 11;  //ActualName
+  MESSAGE_PART_LENGTH[44]= 7;  //BankAfterSpend
+  MESSAGE_PART_LENGTH[45]= 7;  //Attack_balance
+  MESSAGE_PART_LENGTH[46]= 11;  //Attack_or_Donate_Flag (Pinky-Inky)
+  MESSAGE_PART_LENGTH[47]= 11;  //Will_or_No (Pinky-Inky)
+  MESSAGE_PART_LENGTH[48]= 11;  //Mirror_or_No (Pinky-Inky)
+  MESSAGE_PART_LENGTH[49]= 7;  //Attack_or_Donate Pinky_Amnt
+  MESSAGE_PART_LENGTH[50]= 7;  //Attack_or_Donate Clyde_Amnt
+  MESSAGE_PART_LENGTH[51]= 7;  //Attack_or_Donate Cherry_Amnt
+  MESSAGE_PART_LENGTH[52]= 7;  //Attack_or_Donate PacMan_Amnt
+  MESSAGE_PART_LENGTH[53]= 7;  //Attack_or_Donate Blinky_Amnt
+  MESSAGE_PART_LENGTH[54]= 7;  //Attack_or_Donate Inky_Amnt
+  MESSAGE_PART_LENGTH[55]= 11;  //Mirror_Balances_Pinky_Values
+  MESSAGE_PART_LENGTH[56]= 11;  //Mirror_Balances_Clyde_Values
+  MESSAGE_PART_LENGTH[57]= 11;  //Mirror_Balances_Cherry_Values
+  MESSAGE_PART_LENGTH[58]= 11;  //Mirror_Balances_Pacman_Values
+  MESSAGE_PART_LENGTH[59]= 11;  //Mirror_Balances_Blinky_Values
+  MESSAGE_PART_LENGTH[60]= 11;  //Mirror_Balances_Inky_Values
+
   
   //Initialize serial and wait for port to open:
   while (!Serial) {;} // wait for serial port to connect. Needed for native USB port only
@@ -195,9 +248,55 @@ void loop()
           }
         }
         if(break_out==1){break;}
-      }  
+      }
       if(break_out==1){break;}
-    }
+    }  
+    Serial.println(MESSAGE_TO_ATMEGA);  //<--  //DEBUG  this statement in final code.
+
+    p=MESSAGE_TO_ATMEGA.indexOf("11:")+3;if(p>-1){Master_Enable=(MESSAGE_TO_ATMEGA.substring(p,p+1).toInt());};Serial.println(Master_Enable);
+    p=MESSAGE_TO_ATMEGA.indexOf("12:")+3;if(p>-1){Light_Enable=(MESSAGE_TO_ATMEGA.substring(p,p+1).toInt());};Serial.println(Light_Enable);
+    p=MESSAGE_TO_ATMEGA.indexOf("13:")+3;if(p>-1){Sound_Enable=(MESSAGE_TO_ATMEGA.substring(p,p+1).toInt());};Serial.println(Sound_Enable);
+    p=MESSAGE_TO_ATMEGA.indexOf("14:")+3;if(p>-1){Motion_Enable=(MESSAGE_TO_ATMEGA.substring(p,p+1).toInt());};Serial.println(Motion_Enable);
+    p=MESSAGE_TO_ATMEGA.indexOf("15:")+3;if(p>-1){Clock_Enable=(MESSAGE_TO_ATMEGA.substring(p,p+1).toInt());};Serial.println(Clock_Enable);
+    p=MESSAGE_TO_ATMEGA.indexOf("16:")+3;if(p>-1){Light_Pinky=(MESSAGE_TO_ATMEGA.substring(p,p+1).toInt());};Serial.println(Light_Pinky);
+    p=MESSAGE_TO_ATMEGA.indexOf("17:")+3;if(p>-1){Light_Clyde=(MESSAGE_TO_ATMEGA.substring(p,p+1).toInt());};Serial.println(Light_Clyde);
+    p=MESSAGE_TO_ATMEGA.indexOf("18:")+3;if(p>-1){Light_Cherry=(MESSAGE_TO_ATMEGA.substring(p,p+1).toInt());};Serial.println(Light_Cherry);
+    p=MESSAGE_TO_ATMEGA.indexOf("19:")+3;if(p>-1){Light_PacMan=(MESSAGE_TO_ATMEGA.substring(p,p+1).toInt());};Serial.println(Light_PacMan);
+    p=MESSAGE_TO_ATMEGA.indexOf("10:")+3;if(p>-1){Light_Blinky=(MESSAGE_TO_ATMEGA.substring(p,p+1).toInt());};Serial.println(Light_Blinky);
+    p=MESSAGE_TO_ATMEGA.indexOf("21:")+3;if(p>-1){Light_Inky=(MESSAGE_TO_ATMEGA.substring(p,p+1).toInt());};Serial.println(Light_Inky);
+    p=MESSAGE_TO_ATMEGA.indexOf("22:")+3;if(p>-1){Light_Sensor_Enable=(MESSAGE_TO_ATMEGA.substring(p,p+1).toInt());};Serial.println(Light_Sensor_Enable);
+    p=MESSAGE_TO_ATMEGA.indexOf("23:")+3;if(p>-1){Light_Sensor_trigger_value= (MESSAGE_TO_ATMEGA.substring(p,p+5).toInt());};Serial.println(Light_Sensor_trigger_value);
+    p=MESSAGE_TO_ATMEGA.indexOf("24:")+3;if(p>-1){Night_Light_Enable_and_mode=(MESSAGE_TO_ATMEGA.substring(p,p+1).toInt());};Serial.println(Night_Light_Enable_and_mode);
+
+    p=MESSAGE_TO_ATMEGA.indexOf("26:")+3;if(p>-1){Alarm_Enable=(MESSAGE_TO_ATMEGA.substring(p,p+1).toInt());};Serial.println(Alarm_Enable);
+    p=MESSAGE_TO_ATMEGA.indexOf("27:")+3;if(p>-1){Alarm_Date=(MESSAGE_TO_ATMEGA.substring(p,p+8));};Serial.println(Alarm_Date);
+    p=MESSAGE_TO_ATMEGA.indexOf("28:")+3;if(p>-1){Alarm_Time=(MESSAGE_TO_ATMEGA.substring(p,p+8));};Serial.println(Alarm_Time);
+    p=MESSAGE_TO_ATMEGA.indexOf("29:")+3;if(p>-1){Performance_number=(MESSAGE_TO_ATMEGA.substring(p,p+2).toInt());};Serial.println(Performance_number);
+    
+    p=MESSAGE_TO_ATMEGA.indexOf("41:")+3;if(p>-1){Stayin_Game_Status=(MESSAGE_TO_ATMEGA.substring(p,p+1).toInt());};Serial.println(Stayin_Game_Status);
+    p=MESSAGE_TO_ATMEGA.indexOf("42:")+3;if(p>-1){myCharNum=(MESSAGE_TO_ATMEGA.substring(p,p+1).toInt());};Serial.println(myCharNum);
+    p=MESSAGE_TO_ATMEGA.indexOf("43:")+3;if(p>-1){ActualName=(MESSAGE_TO_ATMEGA.substring(p,p+7));};Serial.println(ActualName);
+    p=MESSAGE_TO_ATMEGA.indexOf("44:")+3;if(p>-1){BankAfterSpend=(MESSAGE_TO_ATMEGA.substring(p,p+4).toInt());};Serial.println(BankAfterSpend);
+    p=MESSAGE_TO_ATMEGA.indexOf("45:")+3;if(p>-1){Attack_balance=(MESSAGE_TO_ATMEGA.substring(p,p+4).toInt());};Serial.println(Attack_balance);
+    p=MESSAGE_TO_ATMEGA.indexOf("46:")+3;if(p>-1){Attack_or_Donate_Flag=(MESSAGE_TO_ATMEGA.substring(p,p+7).toInt());};Serial.println(Attack_or_Donate_Flag);
+    p=MESSAGE_TO_ATMEGA.indexOf("47:")+3;if(p>-1){Will_or_No=(MESSAGE_TO_ATMEGA.substring(p,p+7).toInt());};Serial.println(Will_or_No);
+    p=MESSAGE_TO_ATMEGA.indexOf("48:")+3;if(p>-1){Mirror_or_No=(MESSAGE_TO_ATMEGA.substring(p,p+7).toInt());};Serial.println(Mirror_or_No);
+    p=MESSAGE_TO_ATMEGA.indexOf("49:")+3;if(p>-1){Attack_or_Donate_Pinky_Amnt=(MESSAGE_TO_ATMEGA.substring(p,p+4).toInt());};Serial.println(Attack_or_Donate_Pinky_Amnt);
+    p=MESSAGE_TO_ATMEGA.indexOf("50:")+3;if(p>-1){Attack_or_Donate_Clyde_Amnt=(MESSAGE_TO_ATMEGA.substring(p,p+4).toInt());};Serial.println(Attack_or_Donate_Clyde_Amnt);
+    p=MESSAGE_TO_ATMEGA.indexOf("51:")+3;if(p>-1){Attack_or_Donate_Cherry_Amnt=(MESSAGE_TO_ATMEGA.substring(p,p+4).toInt());};Serial.println(Attack_or_Donate_Cherry_Amnt);
+    p=MESSAGE_TO_ATMEGA.indexOf("52:")+3;if(p>-1){Attack_or_Donate_PacMan_Amnt=(MESSAGE_TO_ATMEGA.substring(p,p+4).toInt());};Serial.println(Attack_or_Donate_PacMan_Amnt);
+    p=MESSAGE_TO_ATMEGA.indexOf("53:")+3;if(p>-1){Attack_or_Donate_Blinky_Amnt=(MESSAGE_TO_ATMEGA.substring(p,p+4).toInt());};Serial.println(Attack_or_Donate_Blinky_Amnt);
+    p=MESSAGE_TO_ATMEGA.indexOf("54:")+3;if(p>-1){Attack_or_Donate_Inky_Amnt=(MESSAGE_TO_ATMEGA.substring(p,p+4).toInt());};Serial.println(Attack_or_Donate_Inky_Amnt);
+    p=MESSAGE_TO_ATMEGA.indexOf("55:")+3;if(p>-1){Mirror_Balances_Pinky_Values=(MESSAGE_TO_ATMEGA.substring(p,p+7).toInt());};Serial.println(Mirror_Balances_Pinky_Values);
+    p=MESSAGE_TO_ATMEGA.indexOf("56:")+3;if(p>-1){Mirror_Balances_Clyde_Values=(MESSAGE_TO_ATMEGA.substring(p,p+7).toInt());};Serial.println(Mirror_Balances_Clyde_Values);
+    p=MESSAGE_TO_ATMEGA.indexOf("57:")+3;if(p>-1){Mirror_Balances_Cherry_Values=(MESSAGE_TO_ATMEGA.substring(p,p+7).toInt());};Serial.println(Mirror_Balances_Cherry_Values);
+    p=MESSAGE_TO_ATMEGA.indexOf("58:")+3;if(p>-1){Mirror_Balances_Pacman_Values=(MESSAGE_TO_ATMEGA.substring(p,p+7).toInt());};Serial.println(Mirror_Balances_Pacman_Values);
+    p=MESSAGE_TO_ATMEGA.indexOf("59:")+3;if(p>-1){Mirror_Balances_Blinky_Values=(MESSAGE_TO_ATMEGA.substring(p,p+7).toInt());};Serial.println(Mirror_Balances_Blinky_Values);
+    p=MESSAGE_TO_ATMEGA.indexOf("60:")+3;if(p>-1){Mirror_Balances_Inky_Values=(MESSAGE_TO_ATMEGA.substring(p,p+7).toInt());};Serial.println(Mirror_Balances_Inky_Values);
+
+
+    //----- PROCESS MESSAGE FROM ANDROID -----//
+    //----- first determine if in stayin-alive game mode.  All necessary stayin-alive code will reside here to save on Atmega chip memory. -----//
     //DEBUG Serial.println("");
     //DEBUG Serial.print("MESSAGE_TO_ATMEGA =");
     //DEBUG Serial.println(MESSAGE_TO_ATMEGA);
@@ -208,72 +307,9 @@ void loop()
     client.flush();
     client.println("HTTP/1.1 200 OK");
     client.println("Content-type:text/html");
+    client.println(MESSAGE_TO_ATMEGA);
     client.println("Connection: close");
     client.println();
-
-    // Display the HTML web page
-    client.println("<!DOCTYPE html><html>");
-    client.println("<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">");
-    client.println("<link rel=\"icon\" href=\"data:,\">");
-    // CSS to style the on/off buttons 
-    // Feel free to change the background-color and font-size attributes to fit your preferences
-    client.println("<style>html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;}");
-    client.println(".button {background-color: #77878A; border: none; color: white; padding: 8px 20px;");
-    client.println("text-decoration: none; font-size: 20px; margin: 1px; cursor: pointer;}");
-    client.println(".button2 {background-color: #195B6A;}</style></head>");
-    
-
-    client.println("<body><h1>ZACPACMAN</h1>");    // Web Page Heading
-
-    if (MESSAGE_TO_ATMEGA =="11:0x"){M_EN_STATE = "MASTER OFF";}
-    if (MESSAGE_TO_ATMEGA =="11:1x"){M_EN_STATE = "MASTER ON ";}
-    if (MESSAGE_TO_ATMEGA =="12:0x"){L_EN_STATE = "LIGHT OFF";}
-    if (MESSAGE_TO_ATMEGA =="12:1x"){L_EN_STATE = "LIGHT ON ";}
-    if (MESSAGE_TO_ATMEGA =="13:0x"){S_EN_STATE = "SOUND OFF";}
-    if (MESSAGE_TO_ATMEGA =="13:1x"){S_EN_STATE = "SOUND ON ";}
-    if (MESSAGE_TO_ATMEGA =="14:0x"){MO_EN_STATE = "MOTION OFF";}
-    if (MESSAGE_TO_ATMEGA =="14:1x"){MO_EN_STATE = "MOTION ON ";}
-    if (MESSAGE_TO_ATMEGA =="15:0x"){CL_EN_STATE = "CLOCK OFF";}
-    if (MESSAGE_TO_ATMEGA =="15:1x"){CL_EN_STATE = "CLOCK ON ";}
-    if (MESSAGE_TO_ATMEGA =="16:0x"){PIN_EN_STATE = "PINKY OFF";}
-    if (MESSAGE_TO_ATMEGA =="16:1x"){PIN_EN_STATE = "PINKY ON ";}
-    if (MESSAGE_TO_ATMEGA =="17:0x"){CLY_EN_STATE = "CLYDE OFF";}
-    if (MESSAGE_TO_ATMEGA =="17:1x"){CLY_EN_STATE = "CLYDE ON ";}
-    if (MESSAGE_TO_ATMEGA =="18:0x"){CHE_EN_STATE = "CHERRY OFF";}
-    if (MESSAGE_TO_ATMEGA =="18:1x"){CHE_EN_STATE = "CHERRY ON ";}
-    if (MESSAGE_TO_ATMEGA =="19:0x"){PAC_EN_STATE = "PACMAN OFF";}
-    if (MESSAGE_TO_ATMEGA =="19:1x"){PAC_EN_STATE = "PACMAN ON ";}
-    if (MESSAGE_TO_ATMEGA =="20:0x"){BLI_EN_STATE = "BLINKY OFF";}
-    if (MESSAGE_TO_ATMEGA =="20:1x"){BLI_EN_STATE = "BLINKY ON ";}
-    if (MESSAGE_TO_ATMEGA =="21:0x"){INK_EN_STATE = "INKY OFF";}
-    if (MESSAGE_TO_ATMEGA =="21:1x"){INK_EN_STATE = "INKY ON ";}
-    if (MESSAGE_TO_ATMEGA =="22:0x"){LS_EN_STATE = "LIGHT SENSOR OFF";}
-    if (MESSAGE_TO_ATMEGA =="22:1x"){LS_EN_STATE = "LIGHT SENSOR ON ";}
-
-    if (M_EN_STATE == "MASTER OFF"){client.println("MASTER OFF");}
-    if (M_EN_STATE == "MASTER ON "){client.println("MASTER ON");}
-    if (L_EN_STATE == "LIGHT OFF"){client.println("LIGHT OFF");}
-    if (L_EN_STATE == "LIGHT ON "){client.println("LIGHT ON");}
-    if (S_EN_STATE == "SOUND OFF"){client.println("<p><a href=\"ZPMZ13:1x,\"><button class=\"button\">SOUND OFF</button></a></p>");}
-    if (S_EN_STATE == "SOUND ON "){client.println("<p><a href=\"ZPMZ13:0x,\"><button class=\"button button2\">SOUND ON </button></a></p>");}
-    if (MO_EN_STATE == "MOTION OFF"){client.println("<p><a href=\"ZPMZ14:1x,\"><button class=\"button\">MOTION OFF</button></a></p>");}
-    if (MO_EN_STATE == "MOTION ON "){client.println("<p><a href=\"ZPMZ14:0x,\"><button class=\"button button2\">MOTION ON </button></a></p>");}
-    if (CL_EN_STATE == "CLOCK OFF"){client.println("<p><a href=\"ZPMZ15:1x,\"><button class=\"button\">CLOCK OFF</button></a></p>");}
-    if (CL_EN_STATE == "CLOCK ON "){client.println("<p><a href=\"ZPMZ15:0x,\"><button class=\"button button2\">CLOCK ON </button></a></p>");}
-    if (PIN_EN_STATE == "PINKY OFF"){client.println("<p><a href=\"ZPMZ16:1x,\"><button class=\"button\">PINKY OFF</button></a></p>");}
-    if (PIN_EN_STATE == "PINKY ON "){client.println("<p><a href=\"ZPMZ16:0x,\"><button class=\"button button2\">PINKY ON </button></a></p>");}
-    if (CLY_EN_STATE == "CLYDE OFF"){client.println("<p><a href=\"ZPMZ17:1x,\"><button class=\"button\">CLYDE OFF</button></a></p>");}
-    if (CLY_EN_STATE == "CLYDE ON "){client.println("<p><a href=\"ZPMZ17:0x,\"><button class=\"button button2\">CLYDE ON </button></a></p>");}
-    if (CHE_EN_STATE == "CHERRY OFF"){client.println("<p><a href=\"ZPMZ18:1x,\"><button class=\"button\">CHERRY OFF</button></a></p>");}
-    if (CHE_EN_STATE == "CHERRY ON "){client.println("<p><a href=\"ZPMZ18:0x,\"><button class=\"button button2\">CHERRY ON </button></a></p>");}
-    if (PAC_EN_STATE == "PACMAN OFF"){client.println("<p><a href=\"ZPMZ19:1x,\"><button class=\"button\">PACMAN OFF</button></a></p>");}
-    if (PAC_EN_STATE == "PACMAN ON "){client.println("<p><a href=\"ZPMZ19:0x,\"><button class=\"button button2\">PACMAN ON </button></a></p>");}
-    if (BLI_EN_STATE == "BLINKY OFF"){client.println("<p><a href=\"ZPMZ20:1x,\"><button class=\"button\">BLINKY OFF</button></a></p>");}
-    if (BLI_EN_STATE == "BLINKY ON "){client.println("<p><a href=\"ZPMZ20:0x,\"><button class=\"button button2\">BLINKY ON </button></a></p>");}
-    if (INK_EN_STATE == "INKY OFF"){client.println("<p><a href=\"ZPMZ21:1x,\"><button class=\"button\">INKY OFF</button></a></p>");}
-    if (INK_EN_STATE == "INKY ON "){client.println("<p><a href=\"ZPMZ21:0x,\"><button class=\"button button2\">INKY ON </button></a></p>");}
-
-    client.println("</body></html>");
     client.println();   // The HTTP response ends with another blank line     
     MESSAGE_TO_ATMEGA = "";    
     digitalWrite(LED_B, LOW); // light indicator connection was made.

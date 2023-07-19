@@ -250,7 +250,8 @@ void loop()
         if(break_out==1){break;}
       }
       if(break_out==1){break;}
-    }  
+    }
+    Serial.println();  
     Serial.println(MESSAGE_TO_ATMEGA);  //<--  //DEBUG  this statement in final code.
 
     p=MESSAGE_TO_ATMEGA.indexOf("11:")+3;if(p>-1){Master_Enable=(MESSAGE_TO_ATMEGA.substring(p,p+1).toInt());};Serial.println(Master_Enable);
@@ -293,14 +294,15 @@ void loop()
     p=MESSAGE_TO_ATMEGA.indexOf("58:")+3;if(p>-1){Mirror_Balances_Pacman_Values=(MESSAGE_TO_ATMEGA.substring(p,p+7).toInt());};Serial.println(Mirror_Balances_Pacman_Values);
     p=MESSAGE_TO_ATMEGA.indexOf("59:")+3;if(p>-1){Mirror_Balances_Blinky_Values=(MESSAGE_TO_ATMEGA.substring(p,p+7).toInt());};Serial.println(Mirror_Balances_Blinky_Values);
     p=MESSAGE_TO_ATMEGA.indexOf("60:")+3;if(p>-1){Mirror_Balances_Inky_Values=(MESSAGE_TO_ATMEGA.substring(p,p+7).toInt());};Serial.println(Mirror_Balances_Inky_Values);
+    //p=MESSAGE_TO_ATMEGA.indexOf("61:")+3;if(p>-1){Pinky_Rename=(MESSAGE_TO_ATMEGA.substring(p,p+7).toInt());};Serial.println(Pinky_Rename);
 
 
     //----- PROCESS MESSAGE FROM ANDROID -----//
     //----- first determine if in stayin-alive game mode.  All necessary stayin-alive code will reside here to save on Atmega chip memory. -----//
-    //DEBUG Serial.println("");
-    //DEBUG Serial.print("MESSAGE_TO_ATMEGA =");
-    //DEBUG Serial.println(MESSAGE_TO_ATMEGA);
-    //DEBUG Serial.println("");
+    Serial.println("");
+    Serial.print("MESSAGE_TO_ATMEGA =");
+    Serial.println(MESSAGE_TO_ATMEGA);
+    Serial.println("");
 
     digitalWrite(LED_G, LOW); // light indicator Tthat ZPMZ was found.
     digitalWrite(LED_B, HIGH); // light indicator connection was made.

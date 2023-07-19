@@ -258,11 +258,21 @@ void setup() {
   CMD_VAL_LENGTH[29] = 2;  // Performance number
 
   all_lights_off(); 
-  //play_PacMan_intro_song(3);
-  //play_MsPacMan_intro_song(3);
-  //play_Stayin_Alive_song(3);
+  play_PacMan_intro_song(3);
+  delay(2000);
+  play_MsPacMan_intro_song(3);
+  delay(2000);
+  play_Stayin_Alive_song(3);
+  delay(2000);
   //play_Chopin(3);
-  //flicker_controller.do_flicker(true);
+  all_lights_on(); 
+  delay(2000);
+  flicker_controller.do_flicker(false);
+  delay(2000);
+  flicker_controller.do_flicker(true);
+  delay(2000);
+  all_lights_on(); 
+  delay(100000);
 }
 
 void loop() 

@@ -48,7 +48,7 @@ byte MESSAGE_PART_LENGTH[99];
 
 unsigned long currentTime = millis();  // Current time
 unsigned long previousTime = 0; // Previous time
-const long timeoutTime = 4000; // Define timeout time in milliseconds (example: 2000ms = 2s)
+const long timeoutTime = 100; // Define timeout time in milliseconds (example: 2000ms = 2s)
 unsigned char c;                   // char read by client from server http reply
 //unsigned char data_line [100];     // this will be an array holding the invidiually read data points in ASCII value starting after ZPMZ is found and until x is found.
 short data_count;     // counter for number of characters stored or printed.
@@ -240,7 +240,7 @@ void loop()
                   c = client.read(); // read a byte
                   Serial.write(c);  //<======= DO NOT comment this Serial.write statement as part of disabling DEBUG
                   MESSAGE_TO_ATMEGA += c;
-                  if(c==120){break_out=1;}  // 120 is the ASCII value for lower case x.
+                  if(c==94){break_out=1;}  // 94 is the ASCII value for ^.
                   if(break_out==1){break;}
                 } 
               }
@@ -251,9 +251,19 @@ void loop()
       }
       if(break_out==1){break;}
     }
-    Serial.println();  
-    Serial.println(MESSAGE_TO_ATMEGA);  //<--  //DEBUG  this statement in final code.
-
+    /*
+    Serial.println();  */
+    //Serial.println(MESSAGE_TO_ATMEGA);  
+    /*
+    //<--  //DEBUG  this statement in final code.
+    Serial.println(MESSAGE_TO_ATMEGA.indexOf("12:"));
+    int q = MESSAGE_TO_ATMEGA.indexOf("12:")+3;
+    Serial.print("q = ");Serial.println(q);
+    int r = MESSAGE_TO_ATMEGA.substring(q,q+1).toInt();
+    Serial.print("r = ");Serial.println(r);
+    String s = MESSAGE_TO_ATMEGA.substring(q,q+3);
+    Serial.print("String s = ");Serial.println(s);
+/*
     p=MESSAGE_TO_ATMEGA.indexOf("11:")+3;if(p>-1){Master_Enable=(MESSAGE_TO_ATMEGA.substring(p,p+1).toInt());};Serial.println(Master_Enable);
     p=MESSAGE_TO_ATMEGA.indexOf("12:")+3;if(p>-1){Light_Enable=(MESSAGE_TO_ATMEGA.substring(p,p+1).toInt());};Serial.println(Light_Enable);
     p=MESSAGE_TO_ATMEGA.indexOf("13:")+3;if(p>-1){Sound_Enable=(MESSAGE_TO_ATMEGA.substring(p,p+1).toInt());};Serial.println(Sound_Enable);
@@ -295,7 +305,7 @@ void loop()
     p=MESSAGE_TO_ATMEGA.indexOf("59:")+3;if(p>-1){Mirror_Balances_Blinky_Values=(MESSAGE_TO_ATMEGA.substring(p,p+7).toInt());};Serial.println(Mirror_Balances_Blinky_Values);
     p=MESSAGE_TO_ATMEGA.indexOf("60:")+3;if(p>-1){Mirror_Balances_Inky_Values=(MESSAGE_TO_ATMEGA.substring(p,p+7).toInt());};Serial.println(Mirror_Balances_Inky_Values);
     //p=MESSAGE_TO_ATMEGA.indexOf("61:")+3;if(p>-1){Pinky_Rename=(MESSAGE_TO_ATMEGA.substring(p,p+7).toInt());};Serial.println(Pinky_Rename);
-
+  
 
     //----- PROCESS MESSAGE FROM ANDROID -----//
     //----- first determine if in stayin-alive game mode.  All necessary stayin-alive code will reside here to save on Atmega chip memory. -----//
@@ -303,6 +313,7 @@ void loop()
     Serial.print("MESSAGE_TO_ATMEGA =");
     Serial.println(MESSAGE_TO_ATMEGA);
     Serial.println("");
+    */
 
     digitalWrite(LED_G, LOW); // light indicator Tthat ZPMZ was found.
     digitalWrite(LED_B, HIGH); // light indicator connection was made.

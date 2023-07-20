@@ -176,6 +176,7 @@ int DARK_TRIGGER = 500;  // Value below which room is considered dark (ROOM_DARK
 
 const int NUMBER_OF_FLICKER_PINS = 6;
 const int PINS_FOR_FLICKER[NUMBER_OF_FLICKER_PINS] = {11, 10, 9, 6, 5, 3};  // in order, Pinky, Clyde, Cherries, PacMan, Blinky, Inky.
+byte COMM_CTRL;
 bool M_EN = 1;    // Master enable   11
 bool L_EN = 1;    // Light  enable   12
 bool S_EN = 1;    // Sound  enable   13
@@ -187,7 +188,10 @@ bool CHE_EN = 1;  // CHERRY enable   18
 bool PAC_EN = 1;  // PACMAN enable   19
 bool BLI_EN = 1;  // BLINKY enable   20
 bool INK_EN = 1;  // INKY   enable   21
-bool LS_EN = 1;   // LIGHT SENSOR enable 22
+bool LS_EN = 1;   // Light Sensor enable 22
+int LS_VAL = 1500; // Light Sensor Trigger Value
+int NL_EN = 1;   // Night Light enable and mode
+int ALM_EN = 1;   // Alarm enable and mode
 //  DARK_TRIGGER DEFINE ABOVE IS 23
 int PERF_NUM = 0; // PERFORMANCE NUMBER (to trigger events like PACMAN or MSPACMAN songs) 24
 
@@ -199,6 +203,7 @@ byte TOGGLE;
 //----- end GENERAL VARIABLES
 
 //----- LIBRARIES -----//
+
 #include <math.h>
 #include "FlickerController.h"
 #include <SoftwareSerial.h>    // Include software serial library, ESP8266 library dependency
@@ -210,8 +215,9 @@ byte TOGGLE;
   //  Connect GND from the Arduiono to GND on the ESP8266
   //  Pull ESP8266 CH_PD HIGH
 SoftwareSerial mySerial(0,1);  // RX,TX  (7,8 FOR arduino board but NOT FOR ATMEGA CHIP!!! WHICH IS 0,1)
-long SERIAL_TIMEOUT = 350; // This is needed for serial read otherwise, may not read all the data.
+long SERIAL_TIMEOUT = 100; // This is needed for serial read otherwise, may not read all the data.
 bool MESSAGE_RECEIVED;
+bool ZPMZ_FOUND;  // This will trigger when to start storing message in data_line array (only the meaningful information)
 String MESSAGE_INCOMING = ""; 
 int message_length;
 String CMD_CAT_STRING;  // <== command_category_string
@@ -220,8 +226,8 @@ String CMD_VAL_STRING;  // <== command_value_string
 int CMD_VAL_VAL;        // <== command_value_value
 int CMD_VAL_LENGTH[99];
 short data_count;                    // counter for number of characters stored or printed.
-unsigned char c;                   // char read by client from server http reply
-unsigned char data_line [601];     // this will be an array holding the invidiually read data points in ASCII value.
+char c;                   // char read by client from server http reply
+char data_line [601];     // this will be an array holding the invidiually read data points in ASCII value.
 int ZPMZ_end;  // This is the first position in the data_line array after ZPMZ has been found.
 bool break_out = 0;  // used to exit several nested loops once all important part of message is received externally from serial buffer.
 //----- end COMMUNICATIONS RELATED
@@ -237,6 +243,7 @@ void setup() {
   pinMode(PHOTO_RESISTOR, INPUT);
   pinMode(MOTION_PIN, INPUT);
   flicker_controller.setup_controller();
+  /*
   CMD_VAL_LENGTH[11] = 1;  // Master enable
   CMD_VAL_LENGTH[12] = 1;  // Light enable
   CMD_VAL_LENGTH[13] = 1;  // Sound enable
@@ -256,7 +263,8 @@ void setup() {
   CMD_VAL_LENGTH[27] = 6;  // Alarm date
   CMD_VAL_LENGTH[28] = 6;  // Alarm time
   CMD_VAL_LENGTH[29] = 2;  // Performance number
-
+  
+/*
   all_lights_off(); 
   play_PacMan_intro_song(3);
   delay(2000);
@@ -270,9 +278,12 @@ void setup() {
   flicker_controller.do_flicker(false);
   delay(2000);
   flicker_controller.do_flicker(true);
-  delay(2000);
-  all_lights_on(); 
+  delay(2000); 
   delay(100000);
+  */
+  
+  all_lights_on();
+  MO_EN = 0;
 }
 
 void loop() 
@@ -280,60 +291,43 @@ void loop()
   MasterEnableOffResumePosition:  // this goto label is to bypass the majority of the main loop after communication if the main power is shut off by Android app (master enable M_EN==0).
   //----- READ/STORE WANTED DATA FROM RTL8720DN_BW PLACED IN SERIAL BUFFER IF IT EXISTS -----//
   ZPMZ_end = 0;
+  ZPMZ_FOUND = 0;
   if(mySerial.available())
   {
     long lastTimeSerialAvailable = millis();
     while (millis() - lastTimeSerialAvailable < SERIAL_TIMEOUT)
     { 
       data_count = 0;
+      //MESSAGE_INCOMING = "";
       while (mySerial.available())
       {
         MESSAGE_RECEIVED = true;
-        data_count +=1;
-        char c = mySerial.read(); // read a byte
-        data_line[data_count]=c;
-        delay(1);
-        Serial.write(c);   //<---Z?
+        readByte();
         if(c == 90)   // Z was found
         {
-          data_count +=1;
-          c = mySerial.read();    // read a byte 
-          data_line[data_count]=c;
-          delay(1);
-          Serial.write(c);  //<---P?
+          readByte();
           if(c == 80)    // P was found
           {
-            data_count +=1;
-            c = mySerial.read();    // read a byte 
-            data_line[data_count]=c;
-            delay(1);
-            Serial.write(c); //<---M?
+            readByte();
             if(c == 77)   // M was found
             {
-              data_count +=1;
-              c = mySerial.read();    // read a byte 
-              data_line[data_count]=c;
-              delay(1);
-              Serial.write(c); //<---Z?
+              readByte();
               if(c == 90)   // Z was found for a total of ZPMZ
               {
+                ZPMZ_FOUND = true;
                 Serial.println("");
-                //Serial.println("ZPMZ WAS found");
                 ZPMZ_end = data_count;
-                Serial.write(90);  // Z <======= Need to write ZPMZ since it was found and removed from serial buffer...
-                Serial.write(80);  // P
-                Serial.write(77);  // M
-                Serial.write(90);  // Z
+                readByte();
+                for (i = 1; i<126; i++){readByte();}
+                break_out=1;
+                break;
+/*
                 while (mySerial.available())  // while there are bytes to read from the client,
                 {
-                  data_count +=1;
-                  c = mySerial.read(); // read a byte
-                  data_line[data_count]=c;
-                  Serial.write(c);  //<======= DO NOT comment this Serial.write statement as part of disabling DEBUG
-                  if(c==120){break_out=1;}  // 120 is the ASCII value for lower case x.
+                  readByte();
+                  if(c==37){break_out=1;}  // 94 is the ASCII value for ^.
                   if(break_out==1){break;}
-                  delay(2);
-                }
+                }*/
               }
             }
           }
@@ -351,23 +345,115 @@ void loop()
   if(data_count >0)
   {
     MESSAGE_RECEIVED == true;
-    //debugSerial.println("");
-    //debugSerial.println(data_count);
+    Serial.write(90);  // Z <======= Need to write ZPMZ since it was found and removed from serial buffer...
+    Serial.write(80);  // P
+    Serial.write(77);  // M
+    Serial.write(90);  // Z
+    for (i = ZPMZ_end+1; i<data_count; i++){
+      Serial.write(data_line[i]);
+      delay(1);
+    }
 
-    //debugSerial.println("");
-    //debugSerial.print("ZPMZ_end =");
-    //debugSerial.println(ZPMZ_end);
 
-    //debugSerial.println("");
-    //debugSerial.print("data line of ZPMZ =");
-    //debugSerial.println(data_line[ZPMZ_end+1]);
+    COMM_CTRL = (data_line[2]-48);   // Communications_Control
+M_EN = (data_line[9]-48);   // Master_Enable
+L_EN = (data_line[14]-48);   // Light_Enable
+S_EN = (data_line[19]-48);   // Sound_Enable
+MO_EN = (data_line[24]-48);   // Motion_Enable
+CL_EN = (data_line[29]-48);   // Clock_Enable
+PIN_EN = (data_line[34]-48);   // Light_Pinky
+CLY_EN = (data_line[39]-48);   // Light_Clyde
+CHE_EN = (data_line[44]-48);   // Light_Cherry
+PAC_EN = (data_line[49]-48);   // Light_PacMan
+BLI_EN = (data_line[54]-48);   // Light_Blinky
+INK_EN = (data_line[59]-48);   // Light_Inky
+LS_EN = (data_line[64]-48);   // Light_Sensor_Enable
+LS_VAL = (data_line[69]-48);   // Light_Sensor_trigger_value
+NL_EN = (data_line[77]-48);   // Night_Light_Enable_and_mode
+ALM_EN = (data_line[82]-48);   // Alarm_Enable
 
-    CMD_CAT_VAL = (data_line[ZPMZ_end+1]-48)*10 + data_line[ZPMZ_end+2]-48;
-    //debugSerial.print("CMD_CAT_VAL = ");
-    //debugSerial.println(CMD_CAT_VAL);
 
-    CMD_VAL_VAL = data_line[ZPMZ_end+4]-48;
-    //debugSerial.print("CMD_VAL_VAL = ");
+
+
+/*
+    Serial.println("");
+    Serial.print("M_EN = ");
+    Serial.println(M_EN);
+
+    Serial.println("");
+    Serial.print("L_EN = ");
+    Serial.println(L_EN);
+    
+    Serial.println("");
+    Serial.print("S_EN = ");
+    Serial.println(S_EN);
+    
+    Serial.println("");
+    Serial.print("MO_EN = ");
+    Serial.println(MO_EN);
+    
+    Serial.println("");
+    Serial.print("CL_EN = ");
+    Serial.println(CL_EN);
+    
+    Serial.println("");
+    Serial.print("PIN_EN = ");
+    Serial.println(PIN_EN);
+    
+    Serial.println("");
+    Serial.print("CLY_EN = ");
+    Serial.println(CLY_EN);
+    
+    Serial.println("");
+    Serial.print("CHE_EN = ");
+    Serial.println(CHE_EN);
+    
+    Serial.println("");
+    Serial.print("PAC_EN = ");
+    Serial.println(PAC_EN);
+    
+    Serial.println("");
+    Serial.print("BLI_EN = ");
+    Serial.println(BLI_EN);
+    
+    Serial.println("");
+    Serial.print("PAC_EN = ");
+    Serial.println(PAC_EN);
+    
+    Serial.println("");
+    Serial.print("BLI_EN = ");
+    Serial.println(BLI_EN);
+    
+    Serial.println("");
+    Serial.print("INK_EN = ");
+    Serial.println(INK_EN);
+    
+    Serial.println("");
+    Serial.print("LS_EN = ");
+    Serial.println(LS_EN);
+    
+    Serial.println("");
+    Serial.print("LS_VAL = ");
+    Serial.println(LS_VAL);
+    
+    Serial.println("");
+    Serial.print("NL_EN = ");
+    Serial.println(NL_EN);
+    
+    Serial.println("");
+    Serial.print("ALM_EN = ");
+    Serial.println(ALM_EN);
+
+    /*
+    Serial.println("");
+    Serial.println("CMD_CAT_VAL = ");
+    Serial.println(CMD_CAT_VAL);
+    Serial.println(data_line[s]);
+
+    CMD_VAL_VAL = data_line[s+3]-48;
+    Serial.println(CMD_VAL_VAL);
+    //CMD_VAL_VAL = data_line[ZPMZ_end+4]-48;
+    Serial.print("CMD_VAL_VAL = ");
     if(CMD_VAL_LENGTH[CMD_CAT_VAL]>1)
     {
       for (i = 1; i<CMD_VAL_LENGTH[CMD_CAT_VAL]; i++)
@@ -375,88 +461,37 @@ void loop()
         CMD_VAL_VAL = CMD_VAL_VAL*10+data_line[ZPMZ_end+4+i]-48;
       }
     }
-    //debugSerial.println(CMD_VAL_VAL);
+    Serial.println(CMD_VAL_VAL);
 
     //debugSerial.println("");
     //debugSerial.println("");
+    */
     mySerial.flush();
     data_count=0;
     //----- end INTERPRET MESSAGE
   }
-
-  //---UPDATE VARIABLES IF MESSAGE WAS RECEIVED---//
-  if(MESSAGE_RECEIVED == true)  
-  {
-    if(CMD_CAT_VAL == 11){if(CMD_VAL_VAL == 1){M_EN = 1;}else{M_EN = 0;}}  // 11:#,Master Enable,
-    if(CMD_CAT_VAL == 12){if(CMD_VAL_VAL == 1){L_EN = 1;}else{L_EN = 0;}}  // 12:#,Light Enable,
-    if(CMD_CAT_VAL == 13){if(CMD_VAL_VAL == 1){S_EN = 1;}else{S_EN = 0;}}  // 13:#,Sound Enable,
-    if(CMD_CAT_VAL == 14){if(CMD_VAL_VAL == 1){MO_EN = 1;}else{MO_EN = 0;}}  // 14:#,Motion Enable,
-    if(CMD_CAT_VAL == 15){if(CMD_VAL_VAL == 1){CL_EN = 1;}else{CL_EN = 0;}}  // 15:#,Clock Enable,
-    if(CMD_CAT_VAL == 16){if(CMD_VAL_VAL == 1){PIN_EN = 1;}else{PIN_EN = 0;}}  // 16:#,Light Pinky,
-    if(CMD_CAT_VAL == 17){if(CMD_VAL_VAL == 1){CLY_EN = 1;}else{CLY_EN = 0;}}  // 17:#,Light Clyde,
-    if(CMD_CAT_VAL == 18){if(CMD_VAL_VAL == 1){CHE_EN = 1;}else{CHE_EN = 0;}}  // 18:#,Light Cherry,
-    if(CMD_CAT_VAL == 19){if(CMD_VAL_VAL == 1){PAC_EN = 1;}else{PAC_EN = 0;}}  // 19:#,Light PacMan,
-    if(CMD_CAT_VAL == 20){if(CMD_VAL_VAL == 1){BLI_EN = 1;}else{BLI_EN = 0;}}  // 20:#,Light Blinky,
-    if(CMD_CAT_VAL == 21){if(CMD_VAL_VAL == 1){INK_EN = 1;}else{INK_EN = 0;}}  // 21:#,Light Inky,
-    if(CMD_CAT_VAL == 22){if(CMD_VAL_VAL == 1){LS_EN = !LS_EN;}}    // 22:#,Light Sensor Enable,
-    if(CMD_CAT_VAL == 23){}  // 23:####,Light Sensor trigger value,
-    if(CMD_CAT_VAL == 24){}  // 24:#,Night Light Enable and mode,
-    if(CMD_CAT_VAL == 25){}  // empty
-    if(CMD_CAT_VAL == 26){}  // 26:#,Alarm Enable,
-    if(CMD_CAT_VAL == 27){}  // 27:######,Alarm Date,
-    if(CMD_CAT_VAL == 28){}  // 28:######,Alarm Time,
-    if(CMD_CAT_VAL == 29){PERF_NUM = CMD_VAL_VAL;}      // 29:##,Performance number,
-    // saving numbers 30 through 40 for non game part of ZPM
-    // numbers 41 on are for stayin alive game   
-    if(CMD_CAT_VAL == 41){}  //   41:#,Stayin_Game_Status (0,1 = not,ingame),
-    if(CMD_CAT_VAL == 42){}  //   42:#,myCharNum (1, 2, 3, 4, 5, or 6),
-    if(CMD_CAT_VAL == 43){}  //   43:######,ActualName,
-    if(CMD_CAT_VAL == 44){}  //   44:###,BankAfterSpend,
-    if(CMD_CAT_VAL == 45){}  //   45:###,Attack_balance,
-    if(CMD_CAT_VAL == 46){}  //   46:9######,Attack_or_Donate (Pinky-Inky),
-    if(CMD_CAT_VAL == 47){}  //   47:9######,Will_or_No (Pinky-Inky),
-    if(CMD_CAT_VAL == 48){}  //   48:9######,Mirror_or_No (Pinky-Inky),
-    if(CMD_CAT_VAL == 49){}  //   49:###,Attack_or_Donate_Amnt Pinky,
-    if(CMD_CAT_VAL == 50){}  //   50:###,Attack_or_Donate_Amnt Clyde,
-    if(CMD_CAT_VAL == 51){}  //   51:###,Attack_or_Donate_Amnt Cherry,
-    if(CMD_CAT_VAL == 52){}  //   52:###,Attack_or_Donate_Amnt PacMan,
-    if(CMD_CAT_VAL == 53){}  //   53:###,Attack_or_Donate_Amnt Blinky,
-    if(CMD_CAT_VAL == 54){}  //   54:###,Attack_or_Donate_Amnt Inky,
-    if(CMD_CAT_VAL == 55){}  //   55:9######,Mirror_Balances_Pinky_Values
-    if(CMD_CAT_VAL == 56){}  //   56:9######,Mirror_Balances_Clyde_Values
-    if(CMD_CAT_VAL == 57){}  //   57:9######,Mirror_Balances_Cherry_Values
-    if(CMD_CAT_VAL == 58){}  //   58:9######,Mirror_Balances_Pacman_Values
-    if(CMD_CAT_VAL == 59){}  //   59:9######,Mirror_Balances_Blinky_Values
-    if(CMD_CAT_VAL == 60){}  //   60:9######,Mirror_Balances_Inky_Values
-    MESSAGE_RECEIVED = false;
-  }
-
-  //---end UPDATE VARIABLES IF MESSAGE WAS RECEIVED  }
   if(M_EN==0){all_lights_off();goto MasterEnableOffResumePosition;}
+  //delay(1);
+  //-----PLAY SELECTED PERFORMANCE-----//
 
   
-  delay(1);
-  //-----PLAY SELECTED PERFORMANCE-----//
-  if(CMD_CAT_VAL = 29)
+  if(PERF_NUM == 71){play_PacMan_intro_song(3);   PERF_NUM = 0;}
+  if(PERF_NUM == 72){play_MsPacMan_intro_song(3); PERF_NUM = 0;}
+  if(PERF_NUM == 73){play_Stayin_Alive_song(4);   PERF_NUM = 0;}
+  if(PERF_NUM == 74)
   {
-    if((PERF_NUM == 71) && (M_EN == 1)){play_PacMan_intro_song(3);   PERF_NUM = 0;}
-    if((PERF_NUM == 72) && (M_EN == 1)){play_MsPacMan_intro_song(3); PERF_NUM = 0;}
-    if((PERF_NUM == 73) && (M_EN == 1)){play_Stayin_Alive_song(4);   PERF_NUM = 0;}
-    if((PERF_NUM == 74) && (M_EN == 1))
-    {
-      all_lights_off();
-      flicker_controller.do_flicker(true);
-      PERF_NUM = 0;
-    }
-    if((PERF_NUM == 75) && (M_EN == 1))
-    {
-      all_lights_on(); 
-      flicker_controller.do_flicker(false);
-      PERF_NUM = 0;
-    }
-    if((PERF_NUM == 76) && (M_EN == 1)){play_all(); PERF_NUM = 0;}  //<--not in android studio yet and need to refine here first.
-    if((PERF_NUM == 77) && (M_EN == 1)){play_Chopin(3); PERF_NUM = 0;}
+    all_lights_off();
+    flicker_controller.do_flicker(true);
+    PERF_NUM = 0;
   }
+  if(PERF_NUM == 75)
+  {
+    all_lights_on(); 
+    flicker_controller.do_flicker(false);
+    PERF_NUM = 0;
+  }
+  if(PERF_NUM == 76){play_all(); PERF_NUM = 0;}  //<--not in android studio yet and need to refine here first.
+  if(PERF_NUM == 77){play_Chopin(3); PERF_NUM = 0;}
   //-----end PLAY SELECTED PERFORMANCE
   
   //----- RESPOND TO ESP8266 -----//
@@ -471,7 +506,7 @@ void loop()
   if(MO_EN == 1)
   {
     MOTION_DETECTED = digitalRead(MOTION_PIN);
-    if(MOTION_DETECTED == 1){MOTION_TRIGGER_COUNTS = MOTION_TRIGGER_COUNTS + 5;}
+    if(MOTION_DETECTED == 1){MOTION_TRIGGER_COUNTS = MOTION_TRIGGER_COUNTS + 8;}
   }
   MOTION_TRIGGER_COUNTS = MOTION_TRIGGER_COUNTS - 1;
   if(MOTION_TRIGGER_COUNTS <0){MOTION_TRIGGER_COUNTS = 0;}
@@ -483,17 +518,25 @@ void loop()
   if(MOTION_TRIGGER_COUNTS * MO_EN>1200){MO_EN_PAC=1;}else{MO_EN_PAC=1-MO_EN;}
   if(MOTION_TRIGGER_COUNTS * MO_EN>1600){MO_EN_BLI=1;}else{MO_EN_BLI=1-MO_EN;}
   if(MOTION_TRIGGER_COUNTS * MO_EN>2000){MO_EN_INK=1;}else{MO_EN_INK=1-MO_EN;}
-    
-  digitalWrite(PINS_FOR_FLICKER[0], 1 * MO_EN_PIN * L_EN * PIN_EN);
-  digitalWrite(PINS_FOR_FLICKER[1], 1 * MO_EN_CLY * L_EN * CLY_EN);
-  digitalWrite(PINS_FOR_FLICKER[2], 1 * MO_EN_CHE * L_EN * CHE_EN);
-  digitalWrite(PINS_FOR_FLICKER[3], 1 * MO_EN_PAC * L_EN * PAC_EN);
-  digitalWrite(PINS_FOR_FLICKER[4], 1 * MO_EN_BLI * L_EN * BLI_EN);   
-  digitalWrite(PINS_FOR_FLICKER[5], 1 * MO_EN_INK * L_EN * INK_EN); 
+
+  if(MO_EN == 0){MO_EN_PIN = 1; MO_EN_CLY = 1; MO_EN_CHE = 1; MO_EN_PAC = 1; MO_EN_BLI = 1; MO_EN_INK = 1;}
+
+  digitalWrite(PINS_FOR_FLICKER[0], 1 * PIN_EN * MO_EN_PIN);
+  digitalWrite(PINS_FOR_FLICKER[1], 1 * CLY_EN * MO_EN_CLY);
+  digitalWrite(PINS_FOR_FLICKER[2], 1 * CHE_EN * MO_EN_CHE);
+  digitalWrite(PINS_FOR_FLICKER[3], 1 * PAC_EN * MO_EN_PAC);
+  digitalWrite(PINS_FOR_FLICKER[4], 1 * BLI_EN * MO_EN_BLI);   
+  digitalWrite(PINS_FOR_FLICKER[5], 1 * INK_EN * MO_EN_INK); 
   
-  delay(5);
+  delay(1);
 }
 
+void readByte(){
+  if(ZPMZ_FOUND == 1){data_count +=1;}
+  c = mySerial.read(); // read a byte
+  data_line[data_count]=c;
+  delay(1);
+}
 
 void fade_out_one_LED(){
   int random_LED = random(0,6);

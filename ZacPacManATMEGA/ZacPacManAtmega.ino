@@ -292,6 +292,7 @@ void loop()
   //----- READ/STORE WANTED DATA FROM RTL8720DN_BW PLACED IN SERIAL BUFFER IF IT EXISTS -----//
   ZPMZ_end = 0;
   ZPMZ_FOUND = 0;
+  PERF_NUM = 0;
   if(mySerial.available())
   {
     long lastTimeSerialAvailable = millis();
@@ -371,9 +372,7 @@ LS_EN = (data_line[64]-48);   // Light_Sensor_Enable
 LS_VAL = (data_line[69]-48);   // Light_Sensor_trigger_value
 NL_EN = (data_line[77]-48);   // Night_Light_Enable_and_mode
 ALM_EN = (data_line[82]-48);   // Alarm_Enable
-
-
-
+PERF_NUM = (data_line[113]-48) * 10 + data_line[114]-48;   // Performance Number
 
 /*
     Serial.println("");
@@ -481,16 +480,18 @@ ALM_EN = (data_line[82]-48);   // Alarm_Enable
   if(PERF_NUM == 74)
   {
     all_lights_off();
+    delay(1500);
     flicker_controller.do_flicker(true);
     PERF_NUM = 0;
   }
   if(PERF_NUM == 75)
   {
     all_lights_on(); 
+    delay(1500);
     flicker_controller.do_flicker(false);
     PERF_NUM = 0;
   }
-  if(PERF_NUM == 76){play_all(); PERF_NUM = 0;}  //<--not in android studio yet and need to refine here first.
+  if(PERF_NUM == 76){delay(1500);play_all(); PERF_NUM = 0;}  //<--not in android studio yet and need to refine here first.
   if(PERF_NUM == 77){play_Chopin(3); PERF_NUM = 0;}
   //-----end PLAY SELECTED PERFORMANCE
   
@@ -506,7 +507,7 @@ ALM_EN = (data_line[82]-48);   // Alarm_Enable
   if(MO_EN == 1)
   {
     MOTION_DETECTED = digitalRead(MOTION_PIN);
-    if(MOTION_DETECTED == 1){MOTION_TRIGGER_COUNTS = MOTION_TRIGGER_COUNTS + 8;}
+    if(MOTION_DETECTED == 1){MOTION_TRIGGER_COUNTS = MOTION_TRIGGER_COUNTS + 3;}
   }
   MOTION_TRIGGER_COUNTS = MOTION_TRIGGER_COUNTS - 1;
   if(MOTION_TRIGGER_COUNTS <0){MOTION_TRIGGER_COUNTS = 0;}
@@ -571,6 +572,7 @@ void fade_out_one_LED(){
 
 void play_PacMan_intro_song(byte added_divider) {
   all_lights_off();
+  delay(1500);
   // Remember, the array is twice the number of notes (notes + durations)
   for (int thisNote = 0; thisNote < notes * 2; thisNote = thisNote + 2) 
   {
@@ -602,6 +604,7 @@ void play_PacMan_intro_song(byte added_divider) {
 
 void play_MsPacMan_intro_song(byte added_divider) {
   all_lights_off();
+  delay(1500);
   // Remember, the array is twice the number of notes (notes + durations)
   for (int thisNote = 0; thisNote < notes2 * 2; thisNote = thisNote + 2) 
   {
@@ -633,6 +636,7 @@ void play_MsPacMan_intro_song(byte added_divider) {
 void play_Stayin_Alive_song(byte added_divider) 
 {
   all_lights_off();
+  delay(1500);
   byte set = 42;
   Most_staying_alive_notes(added_divider, set);
   //two long notes

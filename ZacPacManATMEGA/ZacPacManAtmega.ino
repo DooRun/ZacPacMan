@@ -171,7 +171,6 @@ unsigned long REDUCE_COUNTS_AT_TIME = millis();
 const int PHOTO_RESISTOR = A5; // photoresistor for shop brightness (input)
 int ROOM_LIGHT;  // value of current room light
 bool ROOM_DARK;
-int DARK_TRIGGER = 500;  // Value below which room is considered dark (ROOM_DARK IS THEN SET TO 1)
 //----- end LIGHT SENSOR RELATED
 
 const int NUMBER_OF_FLICKER_PINS = 6;
@@ -190,9 +189,8 @@ bool BLI_EN = 1;  // BLINKY enable   20
 bool INK_EN = 1;  // INKY   enable   21
 bool LS_EN = 1;   // Light Sensor enable 22
 int LS_VAL = 1500; // Light Sensor Trigger Value
-int NL_EN = 1;   // Night Light enable and mode
+int NL_EN = 0;   // Night Light enable and mode
 int ALM_EN = 1;   // Alarm enable and mode
-//  DARK_TRIGGER DEFINE ABOVE IS 23
 int PERF_NUM = 0; // PERFORMANCE NUMBER (to trigger events like PACMAN or MSPACMAN songs) 24
 
 int i;
@@ -328,7 +326,6 @@ void loop()
       delay(1);
     }
 
-
     COMM_CTRL = (data_line[2]-48);   // Communications_Control
     M_EN = (data_line[9]-48);   // Master_Enable
     L_EN = (data_line[14]-48);   // Light_Enable
@@ -341,32 +338,17 @@ void loop()
     PAC_EN = (data_line[49]-48);   // Light_PacMan
     BLI_EN = (data_line[54]-48);   // Light_Blinky
     INK_EN = (data_line[59]-48);   // Light_Inky
-    LS_EN = (data_line[64]-48);   // Light_Sensor_Enable
-    LS_VAL = (data_line[69]-48);   // Light_Sensor_trigger_value
+    LS_EN = (data_line[64]-48);   // Light_Sensor_Enable... <this may not be needed with night light enable (NL_EN).  Saving this spot for future other use.
+
+    LS_VAL = (data_line[69]-48);
+    if(LS_VAL > 1){LS_VAL = 0;}
+    LS_VAL += LS_VAL * 1000 + (data_line[69]-48) * 100 + (data_line[70]-48) * 10 + (data_line[71]-48);   // Light_Sensor_trigger_value
+    
     NL_EN = (data_line[77]-48);   // Night_Light_Enable_and_mode
     ALM_EN = (data_line[82]-48);   // Alarm_Enable
     PERF_NUM = (data_line[113]-48) * 10 + data_line[114]-48;   // Performance Number
 
-    Serial.println("");
-    Serial.println("CMD_CAT_VAL = ");
-    Serial.println(CMD_CAT_VAL);
-    Serial.println(data_line[s]);
 
-    CMD_VAL_VAL = data_line[s+3]-48;
-    Serial.println(CMD_VAL_VAL);
-    //CMD_VAL_VAL = data_line[ZPMZ_end+4]-48;
-    Serial.print("CMD_VAL_VAL = ");
-    if(CMD_VAL_LENGTH[CMD_CAT_VAL]>1)
-    {
-      for (i = 1; i<CMD_VAL_LENGTH[CMD_CAT_VAL]; i++)
-      {
-        CMD_VAL_VAL = CMD_VAL_VAL*10+data_line[ZPMZ_end+4+i]-48;
-      }
-    }
-    Serial.println(CMD_VAL_VAL);
-
-    //debugSerial.println("");
-    //debugSerial.println("");
     
     mySerial.flush();
     data_count=0;
@@ -404,7 +386,13 @@ void loop()
 
   //..........measure room brightness.................................................................................
   ROOM_LIGHT = analogRead(PHOTO_RESISTOR);
-  if(ROOM_LIGHT < DARK_TRIGGER){ROOM_DARK = 1;}else{ROOM_DARK = 0;}
+  if(ROOM_LIGHT < LS_VAL){ROOM_DARK = 1;}else{ROOM_DARK = 0;}
+  //--NL_EN = 0 MEANS LIGHT SENSOR IS IGNORED AND ALL SOUND AND LIGHTS ARE UNCHANGED.
+  //--NL_EN = 1 MEANS LIGHT SENSOR IS READ AND IF ROOM IF ROOM IS BRIGHT (ROOM_DARK==0) THEN L_EN = 0 AND S_EN IS UNTOUCHED.
+  //--NL_EN = 1 MEANS LIGHT SENSOR IS READ AND IF ROOM IF ROOM IS DARK (ROOM_DARK==1) THEN L_EN = 1 AND S_EN IS UNTOUCHED.
+  //--NL_EN = 2 MEANS LIGHT SENSOR IS READ AND IF ROOM IF ROOM IS DARK(ROOM_DARK==0) THEN L_EN = 1 AND S_EN = 0 (SILENT ROOM DARK MODE).
+  if(NL_EN == 1){if(ROOM_DARK == 0){L_EN = 1;}else{L_EN = 0;}}
+  if(NL_EN == 2){if(ROOM_DARK == 0){L_EN = 1; S_EN = 0;}else{L_EN = 0; S_EN = 1;}}
 
   //..........check for motion at all sensors................................................................
   if(MO_EN == 1)
@@ -425,12 +413,12 @@ void loop()
 
   if(MO_EN == 0){MO_EN_PIN = 1; MO_EN_CLY = 1; MO_EN_CHE = 1; MO_EN_PAC = 1; MO_EN_BLI = 1; MO_EN_INK = 1;}
 
-  digitalWrite(PINS_FOR_FLICKER[0], 1 * PIN_EN * MO_EN_PIN);
-  digitalWrite(PINS_FOR_FLICKER[1], 1 * CLY_EN * MO_EN_CLY);
-  digitalWrite(PINS_FOR_FLICKER[2], 1 * CHE_EN * MO_EN_CHE);
-  digitalWrite(PINS_FOR_FLICKER[3], 1 * PAC_EN * MO_EN_PAC);
-  digitalWrite(PINS_FOR_FLICKER[4], 1 * BLI_EN * MO_EN_BLI);   
-  digitalWrite(PINS_FOR_FLICKER[5], 1 * INK_EN * MO_EN_INK); 
+  digitalWrite(PINS_FOR_FLICKER[0], 1 * PIN_EN * MO_EN_PIN  * L_EN);
+  digitalWrite(PINS_FOR_FLICKER[1], 1 * CLY_EN * MO_EN_CLY  * L_EN);
+  digitalWrite(PINS_FOR_FLICKER[2], 1 * CHE_EN * MO_EN_CHE  * L_EN);
+  digitalWrite(PINS_FOR_FLICKER[3], 1 * PAC_EN * MO_EN_PAC  * L_EN);
+  digitalWrite(PINS_FOR_FLICKER[4], 1 * BLI_EN * MO_EN_BLI  * L_EN);   
+  digitalWrite(PINS_FOR_FLICKER[5], 1 * INK_EN * MO_EN_INK  * L_EN); 
   
   delay(1);
 }
@@ -458,17 +446,17 @@ void fade_out_one_LED(){
         else
         {
           boolean state = 1;
-          digitalWrite(PINS_FOR_FLICKER[random_LED],HIGH);
+          digitalWrite(PINS_FOR_FLICKER[random_LED],HIGH * L_EN);
         }
     }
     else
     {
-      analogWrite(PINS_FOR_FLICKER[random_LED],i);
+      analogWrite(PINS_FOR_FLICKER[random_LED],i * L_EN);
     }
     if(S_EN==1){tone(13, i*3);}
     delay(15);
     if(S_EN==1){noTone(13);}
-    if((random_LED == 0) || (random_LED == 5)){digitalWrite(PINS_FOR_FLICKER[random_LED],state);}
+    if((random_LED == 0) || (random_LED == 5)){digitalWrite(PINS_FOR_FLICKER[random_LED],state * L_EN);}
   }  
   digitalWrite(PINS_FOR_FLICKER[random_LED],0);
 }
@@ -490,7 +478,7 @@ void play_PacMan_intro_song(byte added_divider) {
       noteDuration *= 1.5; // increases the duration in half for dotted notes
     }
     // we only play the note for 90% of the duration, leaving 10% as a pause
-    digitalWrite(PINS_FOR_FLICKER[notelights[thisNote/2]],HIGH);
+    digitalWrite(PINS_FOR_FLICKER[notelights[thisNote/2]],HIGH * L_EN);
     delay(3);
     if(S_EN==1){tone(13, melody[thisNote], noteDuration * 0.9);}
     // Wait for the specified duration before playing the next note.
@@ -523,10 +511,11 @@ void play_MsPacMan_intro_song(byte added_divider) {
     }
     // we only play the note for 90% of the duration, leaving 10% as a pause
     if(S_EN==1){tone(13, melody2[thisNote], noteDuration * 0.9);}
-    if(notelights2[thisNote/2] < 6){digitalWrite(PINS_FOR_FLICKER[notelights2[thisNote/2]],HIGH);} else
+    if(notelights2[thisNote/2] < 6){digitalWrite(PINS_FOR_FLICKER[notelights2[thisNote/2]],HIGH * L_EN);}
+    else
     {
       if((thisNote == 42) || (thisNote == 46)){all_lights_on();}        
-      if(thisNote > 42){digitalWrite(PINS_FOR_FLICKER[3], HIGH);}  
+      if(thisNote > 42){digitalWrite(PINS_FOR_FLICKER[3],HIGH * L_EN);}  
     }    
     // Wait for the specified duration before playing the next note.
     delay(noteDuration);
@@ -580,12 +569,12 @@ void play_Stayin_Alive_song(byte added_divider)
     if(counter_shutoff > trigger){counter_shutoff = 0; shutoff = 1;}
     if((trigger == 500) && (counter_shutoff % 450 == 0)){counter_shutoff = 0; shutoff = 1;}
 
-    digitalWrite(PINS_FOR_FLICKER[0], shutoff);
-    analogWrite(PINS_FOR_FLICKER[1], BRIGHT[1]);
-    analogWrite(PINS_FOR_FLICKER[2], BRIGHT[2]);
-    analogWrite(PINS_FOR_FLICKER[3], BRIGHT[3]);
-    analogWrite(PINS_FOR_FLICKER[4], BRIGHT[4]);
-    digitalWrite(PINS_FOR_FLICKER[5], shutoff);
+    digitalWrite(PINS_FOR_FLICKER[0], shutoff * L_EN);
+    analogWrite(PINS_FOR_FLICKER[1], BRIGHT[1] * L_EN);
+    analogWrite(PINS_FOR_FLICKER[2], BRIGHT[2] * L_EN);
+    analogWrite(PINS_FOR_FLICKER[3], BRIGHT[3] * L_EN);
+    analogWrite(PINS_FOR_FLICKER[4], BRIGHT[4] * L_EN);
+    digitalWrite(PINS_FOR_FLICKER[5], shutoff * L_EN);
 
   }
   all_lights_off();
@@ -608,7 +597,7 @@ void Most_staying_alive_notes(byte added_divider, byte set) {
     }
     // we only play the note for 90% of the duration, leaving 10% as a pause
     if(S_EN==1){tone(13, melody3[thisNote], noteDuration*.9);}
-    digitalWrite(PINS_FOR_FLICKER[notelights3[thisNote/2]],HIGH);
+    digitalWrite(PINS_FOR_FLICKER[notelights3[thisNote/2]],HIGH * L_EN);
     // Wait for the specified duration before playing the next note.
     delay(noteDuration/2);
     if((thisNote > 42) && thisNote < 2 * notes - 2){digitalWrite(PINS_FOR_FLICKER[notelights3[thisNote/2]],LOW);}
@@ -647,7 +636,7 @@ void play_Chopin(byte added_divider)
     }
 
     // we only play the note for 90% of the duration, leaving 10% as a pause
-    digitalWrite(PINS_FOR_FLICKER[notelights4[thisNote4/2]],HIGH);
+    digitalWrite(PINS_FOR_FLICKER[notelights4[thisNote4/2]],HIGH * L_EN);
     if(S_EN==1){tone(13, melody4[thisNote4], noteDuration * articulation);}
     // Wait for the specified duration before playing the next note.
     delay(noteDuration);
@@ -662,11 +651,11 @@ void play_Chopin(byte added_divider)
       for (int i = 0; i<12; i=i+1)
       {
         tone(13, NOTE_FS5, trillDuration);
-        digitalWrite(PINS_FOR_FLICKER[1],HIGH);
+        digitalWrite(PINS_FOR_FLICKER[1],HIGH * L_EN);
         delay(trillDuration);
         digitalWrite(PINS_FOR_FLICKER[1],LOW);
         tone(13, NOTE_GS5, trillDuration);
-        digitalWrite(PINS_FOR_FLICKER[2],HIGH);
+        digitalWrite(PINS_FOR_FLICKER[2],HIGH * L_EN);
         delay(trillDuration);
         digitalWrite(PINS_FOR_FLICKER[2],LOW);
       }
@@ -676,11 +665,11 @@ void play_Chopin(byte added_divider)
       for (int i = 0; i<16; i=i+1)
       {
         tone(13, NOTE_E5, trillDuration);
-        digitalWrite(PINS_FOR_FLICKER[2],HIGH);
+        digitalWrite(PINS_FOR_FLICKER[2],HIGH * L_EN);
         delay(trillDuration);
         digitalWrite(PINS_FOR_FLICKER[2],LOW);
         tone(13, NOTE_DS5, trillDuration);
-        digitalWrite(PINS_FOR_FLICKER[3],HIGH);
+        digitalWrite(PINS_FOR_FLICKER[3],HIGH * L_EN);
         delay(trillDuration);
         digitalWrite(PINS_FOR_FLICKER[3],LOW);
       }
@@ -690,11 +679,11 @@ void play_Chopin(byte added_divider)
       for (int i = 0; i<12; i=i+1)
       {
         tone(13, NOTE_FS5, trillDuration);
-        digitalWrite(PINS_FOR_FLICKER[2],HIGH);
+        digitalWrite(PINS_FOR_FLICKER[2],HIGH * L_EN);
         delay(trillDuration);
         digitalWrite(PINS_FOR_FLICKER[2],LOW);
         tone(13, NOTE_GS5, trillDuration);
-        digitalWrite(PINS_FOR_FLICKER[3],HIGH);
+        digitalWrite(PINS_FOR_FLICKER[3],HIGH * L_EN);
         delay(trillDuration);
         digitalWrite(PINS_FOR_FLICKER[3],LOW);
       }
@@ -704,11 +693,11 @@ void play_Chopin(byte added_divider)
       for (int i = 0; i<6; i=i+1)
       {
         tone(13, NOTE_B4, trillDuration);
-        digitalWrite(PINS_FOR_FLICKER[0],HIGH);
+        digitalWrite(PINS_FOR_FLICKER[0],HIGH * L_EN);
         delay(trillDuration);
         digitalWrite(PINS_FOR_FLICKER[0],LOW);
         tone(13, NOTE_CS5, trillDuration);
-        digitalWrite(PINS_FOR_FLICKER[1],HIGH);
+        digitalWrite(PINS_FOR_FLICKER[1],HIGH * L_EN);
         delay(trillDuration);
         digitalWrite(PINS_FOR_FLICKER[1],LOW);
       }
@@ -774,12 +763,12 @@ void play_all()
 }
 
 void all_lights_on(){
-  digitalWrite(PINS_FOR_FLICKER[0], HIGH);
-  digitalWrite(PINS_FOR_FLICKER[1], HIGH);
-  digitalWrite(PINS_FOR_FLICKER[2], HIGH);
-  digitalWrite(PINS_FOR_FLICKER[3], HIGH);
-  digitalWrite(PINS_FOR_FLICKER[4], HIGH);
-  digitalWrite(PINS_FOR_FLICKER[5], HIGH);
+  digitalWrite(PINS_FOR_FLICKER[0], HIGH * L_EN);
+  digitalWrite(PINS_FOR_FLICKER[1], HIGH * L_EN);
+  digitalWrite(PINS_FOR_FLICKER[2], HIGH * L_EN);
+  digitalWrite(PINS_FOR_FLICKER[3], HIGH * L_EN);
+  digitalWrite(PINS_FOR_FLICKER[4], HIGH * L_EN);
+  digitalWrite(PINS_FOR_FLICKER[5], HIGH * L_EN);
 }
 
 void all_lights_off(){

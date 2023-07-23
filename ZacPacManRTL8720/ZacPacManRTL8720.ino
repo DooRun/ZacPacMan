@@ -1,3 +1,5 @@
+
+
 //***** ZacPacManRTL8720 *****//
 //  This is the code for the wireless modcule RTL8720DN_BW16
 //  It acts a server to create an html page for clients to control the ZacPacMan Shelf
@@ -21,9 +23,10 @@
 */
 
 #include <WiFi.h>
+#include <wifi_conf.h>
 
 //---Brookings programming version below---
-int wifi_set_channel_plan(uint8_t channel_plan);
+
 char ssid1[] = "007";
 char pass1[] = "skyfall1";
 //int keyIndex1 = 0;        // your network key Index number (needed only for WEP)
@@ -96,6 +99,8 @@ int Mirror_Balances_Inky_Values;
 
 void setup() 
 {
+
+
   pinMode(LED_B, OUTPUT);
   pinMode(LED_R, OUTPUT);
   pinMode(LED_G, OUTPUT);
@@ -107,6 +112,33 @@ void setup()
   Serial.begin(9600);
   for (int i = 0; i<99; i=i+1){MESSAGE_PART_LENGTH[i]=8;}
 
+  //int channel_plan = wifi_get_channel_plan();
+  /*
+  uint8_t chnpln;     // Default channel plan 0x7F
+  uint8_t chntgt = 0x76;
+  if(wifi_get_channel_plan(&chnpln) == RTW_SUCCESS)
+  {
+    //at_printf("WiFi Channel Plan: 0x%x\r\n", chnpln);
+    if (chnpln != chntgt) 
+    {
+      if (wifi_set_channel_plan(chntgt) == RTW_SUCCESS)
+      {
+        //at_printf("WiFi Set Channel Plan OK\r\n");
+        wifi_get_channel_plan(&chnpln);
+        //at_printf("WiFi Channel Plan: 0x%x\r\n", chnpln);
+      }
+      else 
+      {
+        //at_printf("WiFi Set Channel Plan Failed\r\n");
+      }
+    }
+  }
+
+
+  //Serial.println("");
+  //Serial.print("Channel plan =");
+  //Serial.println(channel_plan);
+*/
   MESSAGE_PART_LENGTH[10]= 5;  //Message Control.  10:0--reset all variables, 10:1--Stayin game setup mode, 10:2--in-game mode, reset only game variables.
   MESSAGE_PART_LENGTH[11]= 5;  //Master Enable
   MESSAGE_PART_LENGTH[12]= 5;  //Light Enable
@@ -180,7 +212,7 @@ void setup()
     delay(1000);
     status = WiFi.begin(ssid2, pass2);    // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
     delay(5000);    // wait 5 seconds for connection:
-    if(status = WL_CONNECTED)
+    if(status == WL_CONNECTED)
     {
       Serial.println("");
       Serial.println(".............................connected to second");
@@ -263,7 +295,7 @@ void loop()
     Serial.print("r = ");Serial.println(r);
     String s = MESSAGE_TO_ATMEGA.substring(q,q+3);
     Serial.print("String s = ");Serial.println(s);
-/*
+
     p=MESSAGE_TO_ATMEGA.indexOf("11:")+3;if(p>-1){Master_Enable=(MESSAGE_TO_ATMEGA.substring(p,p+1).toInt());};Serial.println(Master_Enable);
     p=MESSAGE_TO_ATMEGA.indexOf("12:")+3;if(p>-1){Light_Enable=(MESSAGE_TO_ATMEGA.substring(p,p+1).toInt());};Serial.println(Light_Enable);
     p=MESSAGE_TO_ATMEGA.indexOf("13:")+3;if(p>-1){Sound_Enable=(MESSAGE_TO_ATMEGA.substring(p,p+1).toInt());};Serial.println(Sound_Enable);

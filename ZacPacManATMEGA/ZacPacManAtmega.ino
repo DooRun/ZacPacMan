@@ -218,13 +218,7 @@ SoftwareSerial mySerial(0,1);  // RX,TX  (7,8 FOR arduino board but NOT FOR ATME
 long SERIAL_TIMEOUT = 100; // This is needed for serial read otherwise, may not read all the data.
 bool MESSAGE_RECEIVED;
 bool ZPMZ_FOUND;  // This will trigger when to start storing message in data_line array (only the meaningful information)
-String MESSAGE_INCOMING = ""; 
-int message_length;
-String CMD_CAT_STRING;  // <== command_category_string
-int CMD_CAT_VAL;        // <== command_category_value
-String CMD_VAL_STRING;  // <== command_value_string
-int CMD_VAL_VAL;        // <== command_value_value
-int CMD_VAL_LENGTH[99];
+String MESSAGE_INCOMING = "";
 short data_count;                    // counter for number of characters stored or printed.
 char c;                   // char read by client from server http reply
 char data_line [601];     // this will be an array holding the invidiually read data points in ASCII value.
@@ -243,27 +237,7 @@ void setup() {
   pinMode(PHOTO_RESISTOR, INPUT);
   pinMode(MOTION_PIN, INPUT);
   flicker_controller.setup_controller();
-  /*
-  CMD_VAL_LENGTH[11] = 1;  // Master enable
-  CMD_VAL_LENGTH[12] = 1;  // Light enable
-  CMD_VAL_LENGTH[13] = 1;  // Sound enable
-  CMD_VAL_LENGTH[14] = 1;  // Motion enable
-  CMD_VAL_LENGTH[15] = 1;  // Clock enable
-  CMD_VAL_LENGTH[16] = 1;  // Light Pinky  PIN
-  CMD_VAL_LENGTH[17] = 1;  // Light Clyde  CLY
-  CMD_VAL_LENGTH[18] = 1;  // Light Cherry CHE
-  CMD_VAL_LENGTH[19] = 1;  // Light PacMan PAC
-  CMD_VAL_LENGTH[20] = 1;  // Light Blinky BLI
-  CMD_VAL_LENGTH[21] = 1;  // Light Inky   INK
-  CMD_VAL_LENGTH[22] = 1;  // Light Sensor enable
-  CMD_VAL_LENGTH[23] = 4;  // Light Sensor trigger value
-  CMD_VAL_LENGTH[24] = 1;  // Night Light enable
-  CMD_VAL_LENGTH[25] = 1;  // Location (SF=0, Brkgs=1) (ip address)
-  CMD_VAL_LENGTH[26] = 1;  // Alarm enable
-  CMD_VAL_LENGTH[27] = 6;  // Alarm date
-  CMD_VAL_LENGTH[28] = 6;  // Alarm time
-  CMD_VAL_LENGTH[29] = 2;  // Performance number
-  
+
 /*
   all_lights_off(); 
   play_PacMan_intro_song(3);
@@ -281,7 +255,6 @@ void setup() {
   delay(2000); 
   delay(100000);
   */
-  
   all_lights_on();
   MO_EN = 0;
 }
@@ -357,93 +330,23 @@ void loop()
 
 
     COMM_CTRL = (data_line[2]-48);   // Communications_Control
-M_EN = (data_line[9]-48);   // Master_Enable
-L_EN = (data_line[14]-48);   // Light_Enable
-S_EN = (data_line[19]-48);   // Sound_Enable
-MO_EN = (data_line[24]-48);   // Motion_Enable
-CL_EN = (data_line[29]-48);   // Clock_Enable
-PIN_EN = (data_line[34]-48);   // Light_Pinky
-CLY_EN = (data_line[39]-48);   // Light_Clyde
-CHE_EN = (data_line[44]-48);   // Light_Cherry
-PAC_EN = (data_line[49]-48);   // Light_PacMan
-BLI_EN = (data_line[54]-48);   // Light_Blinky
-INK_EN = (data_line[59]-48);   // Light_Inky
-LS_EN = (data_line[64]-48);   // Light_Sensor_Enable
-LS_VAL = (data_line[69]-48);   // Light_Sensor_trigger_value
-NL_EN = (data_line[77]-48);   // Night_Light_Enable_and_mode
-ALM_EN = (data_line[82]-48);   // Alarm_Enable
-PERF_NUM = (data_line[113]-48) * 10 + data_line[114]-48;   // Performance Number
+    M_EN = (data_line[9]-48);   // Master_Enable
+    L_EN = (data_line[14]-48);   // Light_Enable
+    S_EN = (data_line[19]-48);   // Sound_Enable
+    MO_EN = (data_line[24]-48);   // Motion_Enable
+    CL_EN = (data_line[29]-48);   // Clock_Enable
+    PIN_EN = (data_line[34]-48);   // Light_Pinky
+    CLY_EN = (data_line[39]-48);   // Light_Clyde
+    CHE_EN = (data_line[44]-48);   // Light_Cherry
+    PAC_EN = (data_line[49]-48);   // Light_PacMan
+    BLI_EN = (data_line[54]-48);   // Light_Blinky
+    INK_EN = (data_line[59]-48);   // Light_Inky
+    LS_EN = (data_line[64]-48);   // Light_Sensor_Enable
+    LS_VAL = (data_line[69]-48);   // Light_Sensor_trigger_value
+    NL_EN = (data_line[77]-48);   // Night_Light_Enable_and_mode
+    ALM_EN = (data_line[82]-48);   // Alarm_Enable
+    PERF_NUM = (data_line[113]-48) * 10 + data_line[114]-48;   // Performance Number
 
-/*
-    Serial.println("");
-    Serial.print("M_EN = ");
-    Serial.println(M_EN);
-
-    Serial.println("");
-    Serial.print("L_EN = ");
-    Serial.println(L_EN);
-    
-    Serial.println("");
-    Serial.print("S_EN = ");
-    Serial.println(S_EN);
-    
-    Serial.println("");
-    Serial.print("MO_EN = ");
-    Serial.println(MO_EN);
-    
-    Serial.println("");
-    Serial.print("CL_EN = ");
-    Serial.println(CL_EN);
-    
-    Serial.println("");
-    Serial.print("PIN_EN = ");
-    Serial.println(PIN_EN);
-    
-    Serial.println("");
-    Serial.print("CLY_EN = ");
-    Serial.println(CLY_EN);
-    
-    Serial.println("");
-    Serial.print("CHE_EN = ");
-    Serial.println(CHE_EN);
-    
-    Serial.println("");
-    Serial.print("PAC_EN = ");
-    Serial.println(PAC_EN);
-    
-    Serial.println("");
-    Serial.print("BLI_EN = ");
-    Serial.println(BLI_EN);
-    
-    Serial.println("");
-    Serial.print("PAC_EN = ");
-    Serial.println(PAC_EN);
-    
-    Serial.println("");
-    Serial.print("BLI_EN = ");
-    Serial.println(BLI_EN);
-    
-    Serial.println("");
-    Serial.print("INK_EN = ");
-    Serial.println(INK_EN);
-    
-    Serial.println("");
-    Serial.print("LS_EN = ");
-    Serial.println(LS_EN);
-    
-    Serial.println("");
-    Serial.print("LS_VAL = ");
-    Serial.println(LS_VAL);
-    
-    Serial.println("");
-    Serial.print("NL_EN = ");
-    Serial.println(NL_EN);
-    
-    Serial.println("");
-    Serial.print("ALM_EN = ");
-    Serial.println(ALM_EN);
-
-    /*
     Serial.println("");
     Serial.println("CMD_CAT_VAL = ");
     Serial.println(CMD_CAT_VAL);
@@ -464,7 +367,7 @@ PERF_NUM = (data_line[113]-48) * 10 + data_line[114]-48;   // Performance Number
 
     //debugSerial.println("");
     //debugSerial.println("");
-    */
+    
     mySerial.flush();
     data_count=0;
     //----- end INTERPRET MESSAGE

@@ -342,7 +342,7 @@ void loop()
 
     LS_VAL = (data_line[69]-48);
     if(LS_VAL > 1){LS_VAL = 0;}
-    LS_VAL += LS_VAL * 1000 + (data_line[69]-48) * 100 + (data_line[70]-48) * 10 + (data_line[71]-48);   // Light_Sensor_trigger_value
+    LS_VAL += LS_VAL * 1000 + (data_line[70]-48) * 100 + (data_line[71]-48) * 10 + (data_line[72]-48);   // Light_Sensor_trigger_value
     
     NL_EN = (data_line[77]-48);   // Night_Light_Enable_and_mode
     ALM_EN = (data_line[82]-48);   // Alarm_Enable

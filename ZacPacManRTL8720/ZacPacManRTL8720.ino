@@ -1,5 +1,3 @@
-
-
 //***** ZacPacManRTL8720 *****//
 //  This is the code for the wireless modcule RTL8720DN_BW16
 //  It acts a server to create an html page for clients to control the ZacPacMan Shelf
@@ -29,25 +27,11 @@
 
 char ssid1[] = "007";
 char pass1[] = "skyfall1";
-//int keyIndex1 = 0;        // your network key Index number (needed only for WEP)
-char ssid2[] = "007";       // second network SSID (name)
-char pass2[] = "skyfall1";  // second network password
-//int keyIndex2 = 0;        // your network key Index number (needed only for WEP)
-
-/*---final version below---*
-char ssid1[] = "DaveCave";
-char pass1[] = "ladytheresabasketballinmypudding";
-//int keyIndex1 = 0;        // your network key Index number (needed only for WEP)
-char ssid2[] = "007";       // second network SSID (name)
-char pass2[] = "skyfall1";  // second network password
-//int keyIndex2 = 0;        // your network key Index number (needed only for WEP)
-*/
 byte status = WL_IDLE_STATUS;
 
 WiFiServer server(80);
  
 String MESSAGE_TO_ATMEGA = ""; 
-byte MESSAGE_PART_LENGTH[99];
 
 unsigned long currentTime = millis();  // Current time
 unsigned long previousTime = 0; // Previous time
@@ -99,8 +83,6 @@ int Mirror_Balances_Inky_Values;
 
 void setup() 
 {
-
-
   pinMode(LED_B, OUTPUT);
   pinMode(LED_R, OUTPUT);
   pinMode(LED_G, OUTPUT);
@@ -110,86 +92,9 @@ void setup()
   delay(300);
 
   Serial.begin(9600);
-  for (int i = 0; i<99; i=i+1){MESSAGE_PART_LENGTH[i]=8;}
-
-  //int channel_plan = wifi_get_channel_plan();
-  /*
-  uint8_t chnpln;     // Default channel plan 0x7F
-  uint8_t chntgt = 0x76;
-  if(wifi_get_channel_plan(&chnpln) == RTW_SUCCESS)
-  {
-    //at_printf("WiFi Channel Plan: 0x%x\r\n", chnpln);
-    if (chnpln != chntgt) 
-    {
-      if (wifi_set_channel_plan(chntgt) == RTW_SUCCESS)
-      {
-        //at_printf("WiFi Set Channel Plan OK\r\n");
-        wifi_get_channel_plan(&chnpln);
-        //at_printf("WiFi Channel Plan: 0x%x\r\n", chnpln);
-      }
-      else 
-      {
-        //at_printf("WiFi Set Channel Plan Failed\r\n");
-      }
-    }
-  }
-
-
-  //Serial.println("");
-  //Serial.print("Channel plan =");
-  //Serial.println(channel_plan);
-*/
-  MESSAGE_PART_LENGTH[10]= 5;  //Message Control.  10:0--reset all variables, 10:1--Stayin game setup mode, 10:2--in-game mode, reset only game variables.
-  MESSAGE_PART_LENGTH[11]= 5;  //Master Enable
-  MESSAGE_PART_LENGTH[12]= 5;  //Light Enable
-  MESSAGE_PART_LENGTH[13]= 5;  //Sound Enable
-  MESSAGE_PART_LENGTH[14]= 5;  //Motion Enable
-  MESSAGE_PART_LENGTH[15]= 5;  //Clock Enable
-  MESSAGE_PART_LENGTH[16]= 5;  //Light Pinky
-  MESSAGE_PART_LENGTH[17]= 5;  //Light Clyde
-  MESSAGE_PART_LENGTH[18]= 5;  //Light Cherry
-  MESSAGE_PART_LENGTH[19]= 5;  //Light PacMan
-  MESSAGE_PART_LENGTH[20]= 5;  //Light Blinky
-  MESSAGE_PART_LENGTH[21]= 5;  //Light Inky
-  MESSAGE_PART_LENGTH[22]= 5;  //Light Sensor Enable
-  MESSAGE_PART_LENGTH[23]= 9;  //Light Sensor trigger value
-  MESSAGE_PART_LENGTH[24]= 5;  //Night Light Enable and mode
-  MESSAGE_PART_LENGTH[25]= 5;  //(ip address preset)
-  MESSAGE_PART_LENGTH[26]= 5;  //Alarm Enable
-  MESSAGE_PART_LENGTH[27]= 11;  //Alarm Date
-  MESSAGE_PART_LENGTH[28]= 11;  //Alarm Time
-  MESSAGE_PART_LENGTH[29]= 6;  //Performance number
-  MESSAGE_PART_LENGTH[41]= 5;  //Stayin_Game_Status (0,1 = not,ingame)
-  MESSAGE_PART_LENGTH[42]= 5;  //myCharNum (1, 2, 3, 4, 5, or 6)
-  MESSAGE_PART_LENGTH[43]= 11;  //ActualName
-  MESSAGE_PART_LENGTH[44]= 7;  //BankAfterSpend
-  MESSAGE_PART_LENGTH[45]= 7;  //Attack_balance
-  MESSAGE_PART_LENGTH[46]= 11;  //Attack_or_Donate_Flag (Pinky-Inky)
-  MESSAGE_PART_LENGTH[47]= 11;  //Will_or_No (Pinky-Inky)
-  MESSAGE_PART_LENGTH[48]= 11;  //Mirror_or_No (Pinky-Inky)
-  MESSAGE_PART_LENGTH[49]= 7;  //Attack_or_Donate Pinky_Amnt
-  MESSAGE_PART_LENGTH[50]= 7;  //Attack_or_Donate Clyde_Amnt
-  MESSAGE_PART_LENGTH[51]= 7;  //Attack_or_Donate Cherry_Amnt
-  MESSAGE_PART_LENGTH[52]= 7;  //Attack_or_Donate PacMan_Amnt
-  MESSAGE_PART_LENGTH[53]= 7;  //Attack_or_Donate Blinky_Amnt
-  MESSAGE_PART_LENGTH[54]= 7;  //Attack_or_Donate Inky_Amnt
-  MESSAGE_PART_LENGTH[55]= 11;  //Mirror_Balances_Pinky_Values
-  MESSAGE_PART_LENGTH[56]= 11;  //Mirror_Balances_Clyde_Values
-  MESSAGE_PART_LENGTH[57]= 11;  //Mirror_Balances_Cherry_Values
-  MESSAGE_PART_LENGTH[58]= 11;  //Mirror_Balances_Pacman_Values
-  MESSAGE_PART_LENGTH[59]= 11;  //Mirror_Balances_Blinky_Values
-  MESSAGE_PART_LENGTH[60]= 11;  //Mirror_Balances_Inky_Values
-
   
   //Initialize serial and wait for port to open:
   while (!Serial) {;} // wait for serial port to connect. Needed for native USB port only
-  // check for the presence of the shield:
-  //if (WiFi.status() == WL_NO_SHIELD) 
-  //{
-  //  Serial.println("WiFi shield not present");
-  //  digitalWrite(LED_R, HIGH);
-  //  while (true);  // don't continue:
-  //  }
 
   digitalWrite(LED_G, LOW);
   digitalWrite(LED_B, HIGH);
@@ -203,21 +108,10 @@ void setup()
     if(status == WL_CONNECTED)
     {
       Serial.println("");
-      Serial.println(".....................successfully connected to first network.");
+      Serial.println(".....................successfully connected to network.");
       break;
     }
-    Serial.println("..................failed to connect to 1st");
-    Serial.println("......................Attempting second network");
-    Serial.println(ssid2);
-    delay(1000);
-    status = WiFi.begin(ssid2, pass2);    // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
-    delay(5000);    // wait 5 seconds for connection:
-    if(status == WL_CONNECTED)
-    {
-      Serial.println("");
-      Serial.println(".............................connected to second");
-    }
-    
+    Serial.println("..................failed to connect to network");
   }
     
   digitalWrite(LED_B, LOW);

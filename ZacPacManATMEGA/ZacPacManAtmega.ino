@@ -149,7 +149,6 @@ int divider = 0, noteDuration = 0;
 //----- end PACMAN AND MS PACMAN SONG INFO
 
 //----- GENERAL VARIABLES -----//
-
 //----- MOTION RELATED -----//
 const int MOTION_PIN = A4; // motion detector
 bool MOTION_DETECTED;
@@ -188,20 +187,17 @@ bool PAC_EN = 1;  // PACMAN enable   19
 bool BLI_EN = 1;  // BLINKY enable   20
 bool INK_EN = 1;  // INKY   enable   21
 bool LS_EN = 1;   // Light Sensor enable 22
-int LS_VAL = 1500; // Light Sensor Trigger Value
-int NL_EN = 0;   // Night Light enable and mode
+int LS_VAL = 543; // Light Sensor Trigger Value
+int NL_EN = 1;   // Night Light enable and mode
 int ALM_EN = 1;   // Alarm enable and mode
 int PERF_NUM = 0; // PERFORMANCE NUMBER (to trigger events like PACMAN or MSPACMAN songs) 24
-
 int i;
 int j;
 byte PIN;
 byte TOGGLE;
-
 //----- end GENERAL VARIABLES
 
 //----- LIBRARIES -----//
-
 #include <math.h>
 #include "FlickerController.h"
 #include <SoftwareSerial.h>    // Include software serial library, ESP8266 library dependency
@@ -390,9 +386,9 @@ void loop()
   //--NL_EN = 0 MEANS LIGHT SENSOR IS IGNORED AND ALL SOUND AND LIGHTS ARE UNCHANGED.
   //--NL_EN = 1 MEANS LIGHT SENSOR IS READ AND IF ROOM IF ROOM IS BRIGHT (ROOM_DARK==0) THEN L_EN = 0 AND S_EN IS UNTOUCHED.
   //--NL_EN = 1 MEANS LIGHT SENSOR IS READ AND IF ROOM IF ROOM IS DARK (ROOM_DARK==1) THEN L_EN = 1 AND S_EN IS UNTOUCHED.
-  //--NL_EN = 2 MEANS LIGHT SENSOR IS READ AND IF ROOM IF ROOM IS DARK(ROOM_DARK==0) THEN L_EN = 1 AND S_EN = 0 (SILENT ROOM DARK MODE).
+  //--NL_EN = 2 MEANS LIGHT SENSOR IS READ AND IF ROOM IF ROOM IS DARK(ROOM_DARK==0) THEN L_EN = 1 AND S_EN = 0 (SILENT ROOM DARK MODE) <--possible future add-on to Android code but not in adroid code yet.
   if(NL_EN == 1){if(ROOM_DARK == 0){L_EN = 1;}else{L_EN = 0;}}
-  if(NL_EN == 2){if(ROOM_DARK == 0){L_EN = 1; S_EN = 0;}else{L_EN = 0; S_EN = 1;}}
+  if(NL_EN == 2){if(ROOM_DARK == 0){L_EN = 1; S_EN = 0;}else{L_EN = 0; S_EN = 1;}} //<--possible future add-on to Android code but not in adroid code yet.
 
   //..........check for motion at all sensors................................................................
   if(MO_EN == 1)
@@ -650,11 +646,11 @@ void play_Chopin(byte added_divider)
     {
       for (int i = 0; i<12; i=i+1)
       {
-        tone(13, NOTE_FS5, trillDuration);
+        if(S_EN == 1){tone(13, NOTE_FS5, trillDuration);}
         digitalWrite(PINS_FOR_FLICKER[1],HIGH * L_EN);
         delay(trillDuration);
         digitalWrite(PINS_FOR_FLICKER[1],LOW);
-        tone(13, NOTE_GS5, trillDuration);
+        if(S_EN == 1){tone(13, NOTE_GS5, trillDuration);}
         digitalWrite(PINS_FOR_FLICKER[2],HIGH * L_EN);
         delay(trillDuration);
         digitalWrite(PINS_FOR_FLICKER[2],LOW);
@@ -664,11 +660,11 @@ void play_Chopin(byte added_divider)
     {      
       for (int i = 0; i<16; i=i+1)
       {
-        tone(13, NOTE_E5, trillDuration);
+        if(S_EN == 1){tone(13, NOTE_E5, trillDuration);}
         digitalWrite(PINS_FOR_FLICKER[2],HIGH * L_EN);
         delay(trillDuration);
         digitalWrite(PINS_FOR_FLICKER[2],LOW);
-        tone(13, NOTE_DS5, trillDuration);
+        if(S_EN == 1){tone(13, NOTE_DS5, trillDuration);}
         digitalWrite(PINS_FOR_FLICKER[3],HIGH * L_EN);
         delay(trillDuration);
         digitalWrite(PINS_FOR_FLICKER[3],LOW);
@@ -678,11 +674,11 @@ void play_Chopin(byte added_divider)
     {
       for (int i = 0; i<12; i=i+1)
       {
-        tone(13, NOTE_FS5, trillDuration);
+        if(S_EN == 1){tone(13, NOTE_FS5, trillDuration);}
         digitalWrite(PINS_FOR_FLICKER[2],HIGH * L_EN);
         delay(trillDuration);
         digitalWrite(PINS_FOR_FLICKER[2],LOW);
-        tone(13, NOTE_GS5, trillDuration);
+        if(S_EN == 1){tone(13, NOTE_GS5, trillDuration);}
         digitalWrite(PINS_FOR_FLICKER[3],HIGH * L_EN);
         delay(trillDuration);
         digitalWrite(PINS_FOR_FLICKER[3],LOW);
@@ -692,11 +688,11 @@ void play_Chopin(byte added_divider)
     {
       for (int i = 0; i<6; i=i+1)
       {
-        tone(13, NOTE_B4, trillDuration);
+        if(S_EN == 1){tone(13, NOTE_B4, trillDuration);}
         digitalWrite(PINS_FOR_FLICKER[0],HIGH * L_EN);
         delay(trillDuration);
         digitalWrite(PINS_FOR_FLICKER[0],LOW);
-        tone(13, NOTE_CS5, trillDuration);
+        if(S_EN == 1){tone(13, NOTE_CS5, trillDuration);}
         digitalWrite(PINS_FOR_FLICKER[1],HIGH * L_EN);
         delay(trillDuration);
         digitalWrite(PINS_FOR_FLICKER[1],LOW);
